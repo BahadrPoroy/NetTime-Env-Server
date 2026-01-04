@@ -97,11 +97,11 @@
         // --- 2. FIREBASE CONFIGURATION ---
         // Replace with your actual Firebase project credentials
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", 
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            apiKey: "AIzaSyDypc66KUn-h-NUFhTLxRPDmJV4fZdvA0U", 
+            authDomain: "nettime-server.firebaseapp.com",
+            databaseURL: "nettime-server-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "nettime-server",
+            storageBucket: "nettime-server.appspot.com",
             messagingSenderId: "YOUR_SENDER_ID",
             appId: "YOUR_APP_ID"
         };
@@ -117,17 +117,22 @@
         dataRef.on('value', (snapshot) => {
             const d = snapshot.val();
             if (d) {
-                // Update numerical/string values from Firebase
+                // Mapping Firebase keys to HTML element IDs
                 document.getElementById('tp').innerText = d.sicaklik || "--";
                 document.getElementById('hm').innerText = d.nem || "--";
-                document.getElementById('t').innerText = d.son_guncelleme || "--:--:--";
+                document.getElementById('t').innerText = d.son_guncelleme || "--:--:--"; 
+                document.getElementById('date').innerText = d.tarih || "--/--/--"; 
                 
-                // Update connection status message based on language
                 const statusEl = document.getElementById('status');
                 statusEl.innerText = translations[currentLang].status_ok;
                 statusEl.style.color = "green";
             }
         }, (error) => {
+            console.error("Firebase read error:", error);
+            const statusEl = document.getElementById('status');
+            statusEl.innerText = translations[currentLang].status_err;
+            statusEl.style.color = "red";
+        }); // Parantez ve virgül hataları burada düzeltildi, (error) => {
             console.error("Firebase read error:", error);
             const statusEl = document.getElementById('status');
             statusEl.innerText = translations[currentLang].status_err;
