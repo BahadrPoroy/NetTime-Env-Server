@@ -15,7 +15,6 @@
         .row { display: flex; justify-content: space-around; margin-top: 20px; }
         h2 { margin-top: 10px; border-bottom: 2px solid #888; padding-bottom: 10px; }
         
-        /* Language Toggle Button Style */
         .lang-btn {
             position: absolute; top: 15px; right: 15px;
             background: #333; color: white; border: none;
@@ -30,30 +29,19 @@
 
     <div class="card">
         <button class="lang-btn" onclick="toggleLanguage()" id="btn-lang">EN</button>
-        
         <h2 id="lbl-title">NetTime Server</h2>
-        
         <p><span id="lbl-date">Date</span>:<br><span id="date" class="val">--/--/--</span></p>
-        
         <p><span id="lbl-time">Time</span>:<br><span id="t" class="val">--:--:--</span></p>
-        
         <div class="row">
-            <div>
-                <p><span id="lbl-temp">Temperature</span>:<br><span id="tp" class="val">--</span>°C</p>
-            </div>
-            <div>
-                <p><span id="lbl-hum">Humidity</span>:<br><span id="hm" class="val">--</span>%</p>
-            </div>
+            <div><p><span id="lbl-temp">Temperature</span>:<br><span id="tp" class="val">--</span>°C</p></div>
+            <div><p><span id="lbl-hum">Humidity</span>:<br><span id="hm" class="val">--</span>%</p></div>
         </div>
-        
         <div id="status">Waiting for connection...</div>
     </div>
 
     <script>
         // --- 1. LANGUAGE CONFIGURATION ---
-        // Default language is Turkish
         let currentLang = 'tr';
-        
         const translations = {
             tr: {
                 title: "NetTime Sunucusu",
@@ -77,13 +65,11 @@
             }
         };
 
-        // Switch between languages and refresh UI
         function toggleLanguage() {
             currentLang = currentLang === 'tr' ? 'en' : 'tr';
             updateUI();
         }
 
-        // Update all static labels based on selected language
         function updateUI() {
             const lang = translations[currentLang];
             document.getElementById('lbl-title').innerText = lang.title;
@@ -95,7 +81,6 @@
         }
 
         // --- 2. FIREBASE CONFIGURATION ---
-        // Replace with your actual Firebase project credentials
         const firebaseConfig = {
             apiKey: "AIzaSyBuymOotkf84zMBQYSbT3HZgFmQXoO-o-0", 
             authDomain: "nettime-server.firebaseapp.com",
@@ -106,18 +91,14 @@
             appId: "1:495196153506:web:53a57cd0048d4a0dcf99fb"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        
-        // Reference to the data path defined in NodeMCU code
         const dataRef = database.ref('/NetTime');
 
-        // Real-time listener for database changes
+        // Real-time listener
         dataRef.on('value', (snapshot) => {
             const d = snapshot.val();
             if (d) {
-                // Mapping Firebase keys to HTML element IDs
                 document.getElementById('tp').innerText = d.sicaklik || "--";
                 document.getElementById('hm').innerText = d.nem || "--";
                 document.getElementById('t').innerText = d.son_guncelleme || "--:--:--"; 
@@ -128,11 +109,6 @@
                 statusEl.style.color = "green";
             }
         }, (error) => {
-            console.error("Firebase read error:", error);
-            const statusEl = document.getElementById('status');
-            statusEl.innerText = translations[currentLang].status_err;
-            statusEl.style.color = "red";
-        }); // Parantez ve virgül hataları burada düzeltildi, (error) => {
             console.error("Firebase read error:", error);
             const statusEl = document.getElementById('status');
             statusEl.innerText = translations[currentLang].status_err;
