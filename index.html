@@ -18,17 +18,17 @@
         .lang-btn {
             position: absolute; top: 15px; right: 15px;
             background: #333; color: white; border: none;
-            padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
-            transition: 0.3s;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; font-weight: bold;
+            z-index: 100; /* Butonun her zaman üstte kalmasını sağlar */
         }
-        .lang-btn:hover { background: #555; transform: scale(1.05); }
+        .lang-btn:hover { background: #555; }
         #status { font-size: 0.75rem; color: #444; margin-top: 20px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <button class="lang-btn" onclick="toggleLanguage()" id="btn-lang">EN</button>
+        <button class="lang-btn" id="btn-lang">EN</button>
         <h2 id="lbl-title">NetTime Server</h2>
         <p><span id="lbl-date">Date</span>:<br><span id="date" class="val">--/--/--</span></p>
         <p><span id="lbl-time">Time</span>:<br><span id="t" class="val">--:--:--</span></p>
@@ -40,35 +40,12 @@
     </div>
 
     <script>
-        // --- 1. LANGUAGE CONFIGURATION ---
+        // 1. DİL AYARLARI
         let currentLang = 'tr';
         const translations = {
-            tr: {
-                title: "NetTime Sunucusu",
-                date: "Tarih",
-                time: "Saat",
-                temp: "Sıcaklık",
-                hum: "Nem",
-                status_ok: "Canlı Veri Akışı Aktif",
-                status_err: "Bağlantı Hatası!",
-                btn: "EN"
-            },
-            en: {
-                title: "NetTime Server",
-                date: "Date",
-                time: "Time",
-                temp: "Temperature",
-                hum: "Humidity",
-                status_ok: "Live Data Feed Active",
-                status_err: "Connection Error!",
-                btn: "TR"
-            }
+            tr: { title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", status_err: "Bağlantı Hatası!", btn: "EN" },
+            en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", status_ok: "Live Data Feed Active", status_err: "Connection Error!", btn: "TR" }
         };
-
-        function toggleLanguage() {
-            currentLang = currentLang === 'tr' ? 'en' : 'tr';
-            updateUI();
-        }
 
         function updateUI() {
             const lang = translations[currentLang];
@@ -80,9 +57,15 @@
             document.getElementById('btn-lang').innerText = lang.btn;
         }
 
-        // --- 2. FIREBASE CONFIGURATION ---
+        // Buton tıklama olayını JavaScript içinden bağlıyoruz (onclick hatasını önler)
+        document.getElementById('btn-lang').addEventListener('click', function() {
+            currentLang = currentLang === 'tr' ? 'en' : 'tr';
+            updateUI();
+        });
+
+        // 2. FIREBASE AYARLARI
         const firebaseConfig = {
-            apiKey: "AIzaSyBuymOotkf84zMBQYSbT3HZgFmQXoO-o-0", 
+            apiKey: "AIzaSyBuymOotkf84zMBQYSbT3HZgFmQXoO-o-0",
             authDomain: "nettime-server.firebaseapp.com",
             databaseURL: "https://nettime-server-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "nettime-server",
@@ -95,27 +78,25 @@
         const database = firebase.database();
         const dataRef = database.ref('/NetTime');
 
-        // Real-time listener
+        // Canlı veri dinleyici
         dataRef.on('value', (snapshot) => {
             const d = snapshot.val();
             if (d) {
-                document.getElementById('tp').innerText = d.sicaklik || "--";
-                document.getElementById('hm').innerText = d.nem || "--";
-                document.getElementById('t').innerText = d.son_guncelleme || "--:--:--"; 
-                document.getElementById('date').innerText = d.tarih || "--/--/--"; 
+                document.getElementById('tp').innerText = d.sicaklik !== undefined ? d.sicaklik : "--";
+                document.getElementById('hm').innerText = d.nem !== undefined ? d.nem : "--";
+                document.getElementById('t').innerText = d.son_guncelleme || "--:--:--";
+                document.getElementById('date').innerText = d.tarih || "--/--/--";
                 
                 const statusEl = document.getElementById('status');
                 statusEl.innerText = translations[currentLang].status_ok;
                 statusEl.style.color = "green";
             }
         }, (error) => {
-            console.error("Firebase read error:", error);
-            const statusEl = document.getElementById('status');
-            statusEl.innerText = translations[currentLang].status_err;
-            statusEl.style.color = "red";
+            console.error("Firebase Hatası:", error);
+            document.getElementById('status').innerText = translations[currentLang].status_err;
+            document.getElementById('status').style.color = "red";
         });
 
-        // Initialize UI on page load
         updateUI();
     </script>
 </body>
