@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetTime Env Server | Live Dashboard</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000000; color: #000000; text-align: center; padding-top: 50px; }
+        .card { background: #c0c0c0; display: inline-block; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); min-width: 320px; position: relative; }
+        .val { font-size: 2.2rem; color: #ff0000; font-weight: bold; }
+        .row { display: flex; justify-content: space-around; margin-top: 20px; }
+        h2 { margin-top: 10px; border-bottom: 2px solid #888; padding-bottom: 10px; }
+        
+        /* Language Toggle Button Style */
+        .lang-btn {
+            position: absolute; top: 15px; right: 15px;
+            background: #333; color: white; border: none;
+            padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
+            transition: 0.3s;
+        }
+        .lang-btn:hover { background: #555; transform: scale(1.05); }
+        #status { font-size: 0.75rem; color: #444; margin-top: 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <button class="lang-btn" onclick="toggleLanguage()" id="btn-lang">EN</button>
+        
+        <h2 id="lbl-title">NetTime Server</h2>
+        
+        <p><span id="lbl-date">Date</span>:<br><span id="date" class="val">--/--/--</span></p>
+        
+        <p><span id="lbl-time">Time</span>:<br><span id="t" class="val">--:--:--</span></p>
+        
+        <div class="row">
+            <div>
+                <p><span id="lbl-temp">Temperature</span>:<br><span id="tp" class="val">--</span>°C</p>
+            </div>
+            <div>
+                <p><span id="lbl-hum">Humidity</span>:<br><span id="hm" class="val">--</span>%</p>
+            </div>
+        </div>
+        
+        <div id="status">Waiting for connection...</div>
+    </div>
+
+    <script>
+        // --- 1. LANGUAGE CONFIGURATION ---
+        // Default language is Turkish
+        let currentLang = 'tr';
+        
+        const translations = {
+            tr: {
+                title: "NetTime Sunucusu",
+                date: "Tarih",
+                time: "Saat",
+                temp: "Sıcaklık",
+                hum: "Nem",
+                status_ok: "Canlı Veri Akışı Aktif",
+                status_err: "Bağlantı Hatası!",
+                btn: "EN"
+            },
+            en: {
+                title: "NetTime Server",
+                date: "Date",
+                time: "Time",
+                temp: "Temperature",
+                hum: "Humidity",
+                status_ok: "Live Data Feed Active",
+                status_err: "Connection Error!",
+                btn: "TR"
+            }
+        };
+
+        // Switch between languages and refresh UI
+        function toggleLanguage() {
+            currentLang = currentLang === 'tr' ? 'en' : 'tr';
+            updateUI();
+        }
+
+        // Update all static labels based on selected language
+        function updateUI() {
+            const lang = translations[currentLang];
+            document.getElementById('lbl-title').innerText = lang.title;
+            document.getElementById('lbl-date').innerText = lang.date;
+            document.getElementById('lbl-time').innerText = lang.time;
+            document.getElementById('lbl-temp').innerText = lang.temp;
+            document.getElementById('lbl-hum').innerText = lang.hum;
+            document.getElementById('btn-lang').innerText = lang.btn;
+        }
+
+        // --- 2. FIREBASE CONFIGURATION ---
+        // Replace with your actual Firebase project credentials
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", 
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Reference to the data path defined in NodeMCU code
+        const dataRef = database.ref('/NetTime');
+
+        // Real-time listener for database changes
+        dataRef.on('value', (snapshot) => {
+            const d = snapshot.val();
+            if (d) {
+                // Update numerical/string values from Firebase
+                document.getElementById('tp').innerText = d.sicaklik || "--";
+                document.getElementById('hm').innerText = d.nem || "--";
+                document.getElementById('t').innerText = d.son_guncelleme || "--:--:--";
+                
+                // Update connection status message based on language
+                const statusEl = document.getElementById('status');
+                statusEl.innerText = translations[currentLang].status_ok;
+                statusEl.style.color = "green";
+            }
+        }, (error) => {
+            console.error("Firebase read error:", error);
+            const statusEl = document.getElementById('status');
+            statusEl.innerText = translations[currentLang].status_err;
+            statusEl.style.color = "red";
+        });
+
+        // Initialize UI on page load
+        updateUI();
+    </script>
+</body>
+</html>
