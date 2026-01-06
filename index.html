@@ -1,103 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NetTime Env Server | Live Dashboard</title>
-    
+    <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');</script>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JTCQ9GTPL8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-JTCQ9GTPL8');
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000000; color: #000000; text-align: center; padding-top: 50px; }
-        .card { background: #c0c0c0; display: inline-block; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); min-width: 320px; position: relative; }
-        .val { font-size: 2.2rem; color: #ff0000; font-weight: bold; }
-        .row { display: flex; justify-content: space-around; margin-top: 20px; }
-        h2 { margin-top: 10px; border-bottom: 2px solid #888; padding-bottom: 10px; }
-        
-        .lang-btn {
-            position: absolute; top: 15px; right: 15px;
-            background: #333; color: white; border: none;
-            padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9rem; font-weight: bold;
-            z-index: 100; /* Butonun her zaman üstte kalmasını sağlar */
-        }
-        .lang-btn:hover { background: #555; }
-        #status { font-size: 0.75rem; color: #444; margin-top: 20px; font-style: italic; }
-    </style>
 </head>
 <body>
-
     <div class="card">
-        <button class="lang-btn" id="btn-lang">EN</button>
-        <h2 id="lbl-title">NetTime Server</h2>
-        <p><span id="lbl-date">Date</span>:<br><span id="date" class="val">--/--/--</span></p>
-        <p><span id="lbl-time">Time</span>:<br><span id="t" class="val">--:--:--</span></p>
+        <button id="theme-toggle" class="theme-btn">🌙/☀️</button>
+        <button id="btn-lang" class="lang-btn">EN</button>
+        <h2 id="lbl-title">NetTime Sunucusu</h2>
+        <p><span id="lbl-date">Tarih</span>:<br><span id="date" class="val">--/--/--</span></p>
+        <p><span id="lbl-time">Saat</span>:<br><span id="t" class="val">--:--:--</span></p>
         <div class="row">
-            <div><p><span id="lbl-temp">Temperature</span>:<br><span id="tp" class="val">--</span>°C</p></div>
-            <div><p><span id="lbl-hum">Humidity</span>:<br><span id="hm" class="val">--</span>%</p></div>
+            <div><p><span id="lbl-temp">Sicaklık</span>:<br><span id="tp" class="val">--</span>°C</p></div>
+            <div><p><span id="lbl-hum">Nem</span>:<br><span id="hm" class="val">--</span>%</p></div>
         </div>
-        <div id="status">Waiting for connection...</div>
+        <div id="status">Bağlantı bekleniyor...</div>
     </div>
-
-    <script>
-        // 1. DİL AYARLARI
-        let currentLang = 'tr';
-        const translations = {
-            tr: { title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", status_err: "Bağlantı Hatası!", btn: "EN" },
-            en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", status_ok: "Live Data Feed Active", status_err: "Connection Error!", btn: "TR" }
-        };
-
-        function updateUI() {
-            const lang = translations[currentLang];
-            document.getElementById('lbl-title').innerText = lang.title;
-            document.getElementById('lbl-date').innerText = lang.date;
-            document.getElementById('lbl-time').innerText = lang.time;
-            document.getElementById('lbl-temp').innerText = lang.temp;
-            document.getElementById('lbl-hum').innerText = lang.hum;
-            document.getElementById('btn-lang').innerText = lang.btn;
-        }
-
-        // Buton tıklama olayını JavaScript içinden bağlıyoruz (onclick hatasını önler)
-        document.getElementById('btn-lang').addEventListener('click', function() {
-            currentLang = currentLang === 'tr' ? 'en' : 'tr';
-            updateUI();
-        });
-
-        // 2. FIREBASE AYARLARI
-        const firebaseConfig = {
-            apiKey: "AIzaSyBuymOotkf84zMBQYSbT3HZgFmQXoO-o-0",
-            authDomain: "nettime-server.firebaseapp.com",
-            databaseURL: "https://nettime-server-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "nettime-server",
-            storageBucket: "nettime-server.firebasestorage.app",
-            messagingSenderId: "495196153506",
-            appId: "1:495196153506:web:53a57cd0048d4a0dcf99fb"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const dataRef = database.ref('/NetTime');
-
-        // Canlı veri dinleyici
-        dataRef.on('value', (snapshot) => {
-            const d = snapshot.val();
-            if (d) {
-                document.getElementById('tp').innerText = d.sicaklik !== undefined ? d.sicaklik : "--";
-                document.getElementById('hm').innerText = d.nem !== undefined ? d.nem : "--";
-                document.getElementById('t').innerText = d.son_guncelleme || "--:--:--";
-                document.getElementById('date').innerText = d.tarih || "--/--/--";
-                
-                const statusEl = document.getElementById('status');
-                statusEl.innerText = translations[currentLang].status_ok;
-                statusEl.style.color = "green";
-            }
-        }, (error) => {
-            console.error("Firebase Hatası:", error);
-            document.getElementById('status').innerText = translations[currentLang].status_err;
-            document.getElementById('status').style.color = "red";
-        });
-
-        updateUI();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
