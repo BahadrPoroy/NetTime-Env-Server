@@ -1,3 +1,6 @@
+// --- INITIAL STATE ---
+let isDataReceived = false; // Flag to track if Firebase data has arrived
+
 // --- THEME ---
 document.getElementById('theme-toggle').addEventListener('click', () => {
     const html = document.documentElement;
@@ -9,8 +12,9 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 // --- LANGUAGE ---
 let currentLang = 'tr';
 const translations = {
-    tr: { title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", btn: "EN" },
-    en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", status_ok: "Live Data Feed Active", btn: "TR" }
+    tr: {
+        title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", /* New--> */ waiting: "Bağlantı Bekleniyor..." /* <--New */, btn: "EN" },
+    en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", status_ok: "Live Data Feed Active", /* New--> */ waiting: "Waiting For Connection..." /* <--New */, btn: "TR" }
 };
 const langBtn = document.getElementById('btn-lang');
 langBtn.addEventListener('click', () => {
@@ -24,6 +28,16 @@ function updateUI() {
     document.getElementById('lbl-time').innerText = t.time;
     document.getElementById('lbl-temp').innerText = t.temp;
     document.getElementById('lbl-hum').innerText = t.hum;
+
+    const st = document.getElementById('status');
+    if (isDataReceived) {
+        st.innerText = t.status_ok;
+        st.style.color = "#4CAF50"; // Green for active
+    } else {
+        st.innerText = t.waiting;
+        st.style.color = ""; // Default color for waiting
+    }
+
     langBtn.innerText = t.btn;
 }
 
@@ -42,6 +56,7 @@ const dataRef = firebase.database().ref('/NetTime');
 dataRef.on('value', (snapshot) => {
     const d = snapshot.val();
     if (d) {
+        isDataReceived = true; // Set flag to true when data arrives
         document.getElementById('tp').innerText = d.sicaklik ?? "--";
         document.getElementById('hm').innerText = d.nem ?? "--";
         document.getElementById('t').innerText = d.son_guncelleme ?? "--:--:--";
@@ -51,4 +66,19 @@ dataRef.on('value', (snapshot) => {
         st.style.color = "#4CAF50";
     }
 });
+
+// --- CONNECTION MONITOR ---
+// This section monitors the real-time connection state with the Firebase server
+const connectedRef = firebase.database().ref(".info/connected");
+connectedRef.on("value", (snap) => {
+    if (snap.val() === true) {
+        // Connection established, but still waiting for specific data (NetTime)
+        // updateUI() will decide based on the isDataReceived flag
+    } else {
+        // Connection lost!
+        isDataReceived = false; // Reset the flag
+        updateUI(); // Revert the UI to "Waiting" state
+    }
+});
+
 updateUI();
