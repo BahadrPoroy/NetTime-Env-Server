@@ -32,10 +32,10 @@ function updateUI() {
     const st = document.getElementById('status');
     if (isDataReceived) {
         st.innerText = t.status_ok;
-        st.style.color = "#4CAF50"; // Green for active
+        st.classList.add('connected'); // Sets green color defined in CSS for active
     } else {
         st.innerText = t.waiting;
-        st.style.color = ""; // Default color for waiting
+        st.classList.remove('connected'); // Sets the theme-specific yellow color defined in CSS for waiting
     }
 
     langBtn.innerText = t.btn;
@@ -61,9 +61,7 @@ dataRef.on('value', (snapshot) => {
         document.getElementById('hm').innerText = d.nem ?? "--";
         document.getElementById('t').innerText = d.son_guncelleme ?? "--:--:--";
         document.getElementById('date').innerText = d.tarih ?? "--/--/--";
-        const st = document.getElementById('status');
-        st.innerText = translations[currentLang].status_ok;
-        st.style.color = "#4CAF50";
+        updateUI();
     }
 });
 

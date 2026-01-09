@@ -4,6 +4,8 @@
     --text-color: #ffffff;
     --val-color: #ff0000;
     --btn-bg: #333333;
+    --status-waiting: #ffd54f;
+    --status-ok: #4CAF50;
 }
 
 [data-theme="light"] {
@@ -12,6 +14,8 @@
     --text-color: #1a1a1a;
     --val-color: #b91c1c;
     --btn-bg: #dddddd;
+    --status-waiting: #d48806;
+    --status-ok: #2E7D32;
 }
 
 body {
@@ -75,9 +79,14 @@ p {
 }
 
 #status {
+    color: var(--status-waiting);
     margin-top: 20px;
     font-weight: bold;
     font-size: 0.8rem;
+}
+
+#status.connected{
+    color: var(--status-ok);
 }
 
 .row {
