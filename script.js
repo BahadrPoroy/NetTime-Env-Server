@@ -1,5 +1,8 @@
 // --- INITIAL STATE ---
 let isDataReceived = false; // Flag to track if Firebase data has arrived
+let currentTimestamp = 0;
+let requestID = null;
+let driftCorrection = 0;
 
 // --- THEME ---
 document.getElementById('theme-toggle').addEventListener('click', () => {
@@ -13,7 +16,8 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 let currentLang = 'tr';
 const translations = {
     tr: {
-        title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", /* New--> */ waiting: "Bağlantı Bekleniyor..." /* <--New */, btn: "EN" },
+        title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", /* New--> */ waiting: "Bağlantı Bekleniyor..." /* <--New */, btn: "EN"
+    },
     en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", status_ok: "Live Data Feed Active", /* New--> */ waiting: "Waiting For Connection..." /* <--New */, btn: "TR" }
 };
 const langBtn = document.getElementById('btn-lang');
@@ -59,8 +63,14 @@ dataRef.on('value', (snapshot) => {
         isDataReceived = true; // Set flag to true when data arrives
         document.getElementById('tp').innerText = d.sicaklik ?? "--";
         document.getElementById('hm').innerText = d.nem ?? "--";
-        document.getElementById('t').innerText = d.son_guncelleme ?? "--:--:--";
-        document.getElementById('date').innerText = d.tarih ?? "--/--/--";
+        
+        const newTimestamp = d.timestamp;
+
+        driftCorrection = Date.now() - (newTimestamp * 1000);
+
+        if (!requestID && d.timestamp > 0) {
+            startFluidClock();
+        }
         updateUI();
     }
 });
@@ -78,5 +88,27 @@ connectedRef.on("value", (snap) => {
         updateUI(); // Revert the UI to "Waiting" state
     }
 });
+
+function startFluidClock() {
+    if (requestID) cancelAnimationFrame(requestID);
+    function update() {
+        const now = Date.now();
+        const actualTimestamp = Math.floor((now - driftCorrection) / 1000);
+
+        let dateObj = new Date(actualTimestamp * 1000);
+
+        let timeString = dateObj.toLocaleTimeString('tr-TR', { hour12: false });
+        let dateString = dateObj.toLocaleDateString('tr-TR').replace(/\./g, '/');
+
+        if (document.getElementById('t').innerText !== timeString) {
+            document.getElementById('t').innerText = timeString;
+            document.getElementById('date').innerText = dateString;
+        }
+
+        requestID = requestAnimationFrame(update);
+    }
+
+    requestID = requestAnimationFrame(update);
+}
 
 updateUI();
