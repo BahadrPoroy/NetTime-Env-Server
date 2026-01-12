@@ -11,12 +11,12 @@ void displayDatePage() {
 
   // Row 1: Date
   display.getTextBounds(dateBuffer, 0, 0, &x1, &y1, &w, &h);
-  display.setCursor((SCREEN_WIDTH - w) / 2, 16);
+  display.setCursor((SCREEN_WIDTH - w) / 2, 10);
   display.print(dateBuffer);
 
   // Row 2: Day Name
   display.getTextBounds(currentDay, 0, 0, &x1, &y1, &w, &h);
-  display.setCursor((SCREEN_WIDTH - w) / 2, 40);
+  display.setCursor((SCREEN_WIDTH - w) / 2, 34);
   display.print(currentDay);
   drawWiFiIcon(WiFi.RSSI());
   display.display();
