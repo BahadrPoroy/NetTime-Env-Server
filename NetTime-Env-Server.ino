@@ -1,5 +1,4 @@
 #include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <Adafruit_SH110X.h>
@@ -31,7 +30,6 @@ const char* otaPass = YOUR_OTA_PASS;
 // --- Global Objects ---
 WiFiUDP udp;
 unsigned int udpPort = 4210;  // Port for UDP broadcasting
-ESP8266WebServer server(80);
 
 dht11 DHT;
 
@@ -134,8 +132,6 @@ void setup() {
 
   configTime(gmtOffset_sec, 0, ntpServer);
 
-  setupWebServer();
-
   config.host = YOUR_URL;
   config.signer.tokens.legacy_token = YOUR_DATABASE_SECRET_KEY;
   Firebase.begin(&config, &auth);
@@ -147,7 +143,6 @@ void setup() {
 
 // Main logic for NetTime-Env-Server
 void loop() {
-  server.handleClient();  // Handle incoming web requests
   ArduinoOTA.handle();    // Handle Over-the-Air updates
 
   getLocalTime(&timeinfo);  // Update time structure from system
