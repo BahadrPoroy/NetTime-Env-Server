@@ -12,6 +12,9 @@
 #define TXT_HUM "NEM"
 #define TXT_DATE "TARIH"
 #define TXT_TIME "SAAT"
+#define WEATHER_TITLE "HAVA DURUMU"
+#define SETTINGS_TITLE "AYARLAR"
+#define ABOUT_TITLE "HAKKINDA"
 const char* days[] = { "Pazar", "Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi" };
 #else
 // --- English ---
@@ -21,6 +24,9 @@ const char* days[] = { "Pazar", "Pazartesi", "Sali", "Carsamba", "Persembe", "Cu
 #define TXT_HUM "HUM"
 #define TXT_DATE "DATE"
 #define TXT_TIME "TIME"
+#define WEATHER_TITLE "WEATHER"
+#define SETTINGS_TITLE "SETTINGS"
+#define ABOUT_TITLE "ABOUT"
 const char* days[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 #endif
 
