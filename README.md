@@ -1,5 +1,6 @@
 # 🕒 NetTime-Env-Server V2.0.0 🌐
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ### "The NetTime OS - Premium TFT Edition"
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
+### "The NetTime OS - Premium TFT Edition"
 
 
 <p align="center">
