@@ -1,3 +1,4 @@
+#include <FS.h>
 #include <TFT_eSPI.h>
 #include <dht11.h>
 #include <SD.h>
@@ -25,22 +26,31 @@ void setup() {
   Serial.begin(115200);
   pinMode(TFT_LED, OUTPUT);
   digitalWrite(TFT_LED, HIGH);
-  tft.setFreeFont();
 
+  if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
+    Serial.println("SD Kart Hatası!");
+  }
   displayBox.init(tft);
-  netBox.begin(tft, displayBox);
+  tft.decodeUTF8(true);
+  displayBox.setupLittleFS();
+  // Show logo immediately
+  displayBox.drawStaticSplash(tft);
+
+  // Connect WiFi while animating
   timeBox.begin();
-  touchBox.begin(tft);
-  displayBox.drawWelcomeScreen(tft);
-  displayBox.drawStaticUI(tft);
+  netBox.begin(tft, displayBox);
 
-  // Get current signal level
-  int wifiLevel = netBox.getSignalLevel();
-
-  // Update Clock and Wifi Icon
-  displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
-  displayBox.drawWifiIcon(tft, wifiLevel);
-  lastUIUpdate = millis();
+  tft.fillScreen(TFT_BLACK);
+  displayBox.drawTaskbar(tft);
+  File root = SD.open("/");
+  while (true) {
+    File entry = root.openNextFile();
+    if (!entry) break;
+    Serial.print(entry.name());
+    Serial.print("  ");
+    Serial.println(entry.size());
+    entry.close();
+  }
 }
 
 void loop() {
@@ -69,6 +79,8 @@ void loop() {
   if (touchBox.isPressed(tft, x, y)) {
     // 1. Check if Start Icon (Bottom-Left) is pressed
     // Area: x[0-50], y[210-240]
+    x = 320 - x;
+
     if (x < 50 && y > 205) {
       if (!displayBox.isMenuOpen) {
         displayBox.drawStartMenu(tft);
@@ -91,8 +103,8 @@ void loop() {
 
     // 3. Check if RESTART button is pressed (When menu is open)
     if (displayBox.isMenuOpen) {
-      // Area: x[5-100], y[185-210]
-      if (x > 5 && x < 100 && y > 185 && y < 210) {
+      // Area: x[5-99], y[175-200]
+      if (x > 4 && x < 100 && y > 174 && y < 201) {
         tft.fillScreen(TFT_BLACK);
         tft.setTextColor(TFT_RED);
         tft.setTextDatum(MC_DATUM);

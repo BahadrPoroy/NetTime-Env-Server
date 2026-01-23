@@ -7,26 +7,28 @@
 #if SELECTED_LANG == 1
 // --- Türkçe ---
 #define WEB_TEMP "SICAKLIK"
-#define TXT_TEMP "SIC"
+#define TXT_TEMP "Sıcaklık"
 #define WEB_HUM "NEM"
-#define TXT_HUM "NEM"
-#define TXT_DATE "TARIH"
-#define TXT_TIME "SAAT"
+#define TXT_HUM "Nem"
+#define TXT_DATE "Tarih"
+#define TXT_TIME "Saat"
 #define WEATHER_TITLE "HAVA DURUMU"
 #define SETTINGS_TITLE "AYARLAR"
 #define ABOUT_TITLE "HAKKINDA"
-const char* days[] = { "Pazar", "Pazartesi", "Sali", "Carsamba", "Persembe", "Cuma", "Cumartesi" };
+#define TXT_RESTART "Yeniden\nBaşlat"
+const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi" };
 #else
 // --- English ---
 #define WEB_TEMP "TEMPERATURE"
-#define TXT_TEMP "TEMP"
+#define TXT_TEMP "Tempreture"
 #define WEB_HUM "HUMIDITY"
-#define TXT_HUM "HUM"
-#define TXT_DATE "DATE"
-#define TXT_TIME "TIME"
+#define TXT_HUM "Humidity"
+#define TXT_DATE "Date"
+#define TXT_TIME "Time"
 #define WEATHER_TITLE "WEATHER"
 #define SETTINGS_TITLE "SETTINGS"
 #define ABOUT_TITLE "ABOUT"
+#define TXT_RESTART "Restart"
 const char* days[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 #endif
 

@@ -2,15 +2,88 @@
 #define DISPLAY_MANAGER_H
 
 #include <TFT_eSPI.h>
+#include <SD.h>
+#include <LittleFS.h>
 #include "language.h"
 
-class DisplayManager {
-public:
+// Font File Names
+const char *FONT_8 = "ATR8.vlw";
+const char *FONT_12 = "ATR12.vlw";
+const char *FONT_16 = "ATR16.vlw";
+const char *FONT_20 = "ATR20.vlw";
+const char *FONT_24 = "ATR24.vlw";
+const char *FONT_28 = "ATR28.vlw";
+const char *FONT_32 = "ATR32.vlw";
 
+class DisplayManager {
+private:
+  unsigned long lastAnimMillis = 0;
+
+public:
+  /**
+     * @brief Loads and displays a 16-bit BMP image from the SD card.
+     * @param tft Reference to the TFT object.
+     * @param filename Path to the BMP file (e.g., "logo.bmp").
+     * @param x X coordinate for the top-left corner.
+     * @param y Y coordinate for the top-left corner.
+     */
   void init(TFT_eSPI &tft) {
     tft.init();
     tft.setRotation(3);
     tft.fillScreen(TFT_BLACK);
+  }
+
+  void drawSDImage(TFT_eSPI &tft, const char *filename, int x, int y, int w, int h) {
+    File imgFile = SD.open(filename, FILE_READ);
+    if (!imgFile) return;
+
+    uint32_t dataOffset;
+    imgFile.seek(10);
+    imgFile.read((uint8_t *)&dataOffset, 4);
+
+    imgFile.seek(dataOffset);
+
+    for (int row = h - 1; row >= 0; row--) {
+      for (int col = 0; col < w; col++) {
+        uint16_t color;
+        imgFile.read((uint8_t *)&color, 2);
+        tft.drawPixel(x + col, y + row, color);
+      }
+    }
+    // ---------------------------------
+    imgFile.close();
+  }
+
+
+  /**
+     * @brief Shows the "POROY SOFTWARE" splash screen with a loading animation.
+     */
+  void
+  drawStaticSplash(TFT_eSPI &tft) {
+    tft.fillScreen(TFT_BLACK);
+    // Load the logo immediately
+    drawSDImage(tft, "/logo.bmp", 0, 0, 320, 240);
+  }
+
+  int scanX = 85;
+  bool direction = true;
+
+  void updateLoadingAnimation(TFT_eSPI &tft) {
+    // Run animation frame every 40ms without using delay()
+    if (millis() - lastAnimMillis >= 40) {
+      // Erase previous position
+      int startPoint = 85;
+      int endPoint = 235;
+
+      tft.drawFastHLine(scanX, 220, 20, 0x0000);
+
+      if (direction) scanX += 2;
+      else scanX -= 2;
+      if (scanX > endPoint - 20 || scanX < startPoint) direction = !direction;
+
+      tft.drawFastHLine(scanX, 200, 20, TFT_CYAN);
+      lastAnimMillis = millis();
+    }
   }
 
   bool isMenuOpen = false;
@@ -24,9 +97,10 @@ public:
     // Restart Button Area
     tft.fillRect(5, 175, 94, 25, 0x02D7);  // Blue button
     tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
+    tft.loadFont(FONT_12);
     tft.setTextDatum(MC_DATUM);
-    tft.drawString("RESTART", 52, 187);
+    tft.drawString(String(TXT_RESTART), 52, 187);
+    tft.unloadFont();
 
     // Status text or other info
     tft.setTextDatum(TL_DATUM);
@@ -42,63 +116,44 @@ public:
     isMenuOpen = false;
   }
 
-  void resetTextSettings(TFT_eSPI &tft) {
-    tft.setTextSize(1);
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  }
-
-  void drawStaticUI(TFT_eSPI &tft) {
+  void drawTaskbar(TFT_eSPI &tft) {
     // 1. Higher Taskbar area (from y:205 to 240)
     tft.fillRect(0, 205, 320, 35, 0x0112);
     tft.drawFastHLine(0, 205, 320, 0x319F);  // Taskbar border
 
     // 2. Resized Start Button (Centered in the new bar)
-    tft.fillRoundRect(2, 210, 45, 26, 4, 0x02D7);
-    tft.fillCircle(24, 223, 7, TFT_WHITE);  // Win Icon
-  }
-
-  void drawWelcomeScreen(TFT_eSPI &tft) {
-    tft.fillScreen(0x0000);  // Black
-    tft.setTextColor(TFT_SKYBLUE);
-    tft.setTextDatum(MC_DATUM);  // Middle center
-
-    // Fantasy Boot Text (We can replace this with an image array later)
-    tft.drawString("NETTIME OS", 160, 50, 4);
-    tft.drawSmoothArc(160, 120, 50, 45, 0, 360, TFT_SKYBLUE, TFT_BLACK);
-
-    tft.setTextSize(1);
-    tft.drawString("V2.0.0 PREMIUM EDITION", 160, 210, 2);
-    delay(2000);  // Give time to see the "Logo"
-    tft.fillScreen(TFT_BLACK);
+    drawSDImage(tft, "/start.bmp", 5, 206, 32, 32);
   }
 
   void drawHeader(TFT_eSPI &tft, const char *title, uint16_t bgColor, uint16_t txtColor) {
     tft.fillRect(0, 0, 320, 30, bgColor);
-    tft.setTextSize(1);
+    tft.loadFont(FONT_24);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(txtColor, bgColor);
     tft.drawString(title, 160, 15, 2);
+    tft.unloadFont();
   }
 
   void updateWeather(TFT_eSPI &tft, float temp, float hum) {
 
     // 1. Set stable font settings
-    tft.setTextSize(2);
+    tft.unloadFont();
+    tft.loadFont(FONT_16);
+
     tft.setTextDatum(TL_DATUM);
 
     // Temperature (Anti-flicker: providing background color)
     tft.setTextColor(0x04DF, TFT_BLACK);
-    tft.drawString(String(TXT_TEMP) + ": " + String(temp, 1) + " C  ", 10, 35);
+    tft.drawString(String(TXT_TEMP) + ": " + String(temp, 1) + " °C", 10, 35);
 
     // Humidity
     tft.setTextColor(0x04DF, TFT_BLACK);
-    tft.drawString(String(WEB_HUM) + ": %" + String(hum, 0) + "   ", 200, 35);
-
-    resetTextSettings(tft);  // Always reset after custom sizing
+    tft.drawString(String(TXT_HUM) + ": %" + String(hum, 0) + "   ", 200, 35);
+    tft.unloadFont();
   }
 
-  void updateClock(TFT_eSPI &tft, String timeStr, String dateStr) {
+  void
+  updateClock(TFT_eSPI &tft, String timeStr, String dateStr) {
     tft.setTextDatum(TR_DATUM);  // Align to Right
 
     // Time on Taskbar (Top row of tray)
@@ -198,6 +253,42 @@ public:
       // 2. DRAW: Draw the bar with the appropriate state color
       uint16_t color = (i <= signalLevel) ? activeColor : inactiveColor;
       tft.fillRect(x_pos, y_bottom - current_bar_h, bar_w, current_bar_h, color);
+    }
+  }
+
+  void setupLittleFS() {
+    if (!LittleFS.begin()) {
+      Serial.println("LittleFS Mount Failed");
+      return;
+    }
+
+    const char *fonts[] = { FONT_8, FONT_12, FONT_16, FONT_20, FONT_24, FONT_32 };
+
+    for (const char *f : fonts) {
+      if (!LittleFS.exists(f)) {
+        Serial.printf("%s LittleFS'de yok, SD'den aranıyor...\n", f);
+
+        File src = SD.open(f);
+        if (!src) {
+          Serial.printf("HATA: %s SD KARTTA BULUNAMADI! Lütfen kartı kontrol edin.\n", f);
+          continue;
+        }
+
+        File dest = LittleFS.open(f, "w");
+        if (dest) {
+          size_t written = 0;
+          while (src.available()) {
+            written += dest.write(src.read());
+          }
+          dest.close();
+          Serial.printf("BAŞARILI: %s kopyalandı (%d byte).\n", f, written);
+        } else {
+          Serial.println("HATA: LittleFS'e yazılamadı! Yer kalmamış olabilir.");
+        }
+        src.close();
+      } else {
+        Serial.printf("%s zaten LittleFS'de mevcut.\n", f);
+      }
     }
   }
 };
