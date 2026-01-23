@@ -1,4 +1,3 @@
-#include <FS.h>
 #include <TFT_eSPI.h>
 #include <dht11.h>
 #include <SD.h>
@@ -30,9 +29,9 @@ void setup() {
   if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
     Serial.println("SD Kart Hatası!");
   }
+
   displayBox.init(tft);
-  tft.decodeUTF8(true);
-  displayBox.setupLittleFS();
+
   // Show logo immediately
   displayBox.drawStaticSplash(tft);
 
@@ -42,15 +41,6 @@ void setup() {
 
   tft.fillScreen(TFT_BLACK);
   displayBox.drawTaskbar(tft);
-  File root = SD.open("/");
-  while (true) {
-    File entry = root.openNextFile();
-    if (!entry) break;
-    Serial.print(entry.name());
-    Serial.print("  ");
-    Serial.println(entry.size());
-    entry.close();
-  }
 }
 
 void loop() {

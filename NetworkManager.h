@@ -22,8 +22,8 @@ public:
 
     Serial.print("Connecting to WiFi");
     while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
+      display.updateLoadingAnimation(tft);
+      delay(10);
     }
     Serial.println("\nWiFi Connected");
 
