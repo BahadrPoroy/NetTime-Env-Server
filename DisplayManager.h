@@ -4,6 +4,7 @@
 #include <TFT_eSPI.h>
 #include <SD.h>
 #include <LittleFS.h>
+#include <ESP8266WiFi.h>  // Required to use the WiFi object inside this class
 #include "language.h"
 #include "myFonts.h"
 
@@ -81,47 +82,43 @@ public:
   bool isClockExpanded = false;
 
   void drawStartMenu(TFT_eSPI &tft) {
-    // 1. Menu Background (Dark Gray/Blue Win7 Style)
-    tft.fillRect(2, 120, 100, 85, 0x10A2);
-    tft.drawRect(2, 120, 100, 85, 0x319F);
+    // 1. Menu Container (Extended height to fit 3 items)
+    // Positioned from Y: 125 to 205
+    tft.fillRect(2, 125, 100, 80, 0x10A2);
+    tft.drawRect(2, 125, 100, 80, 0x319F);
 
-    // 2. Restart Button Area (Increased height to 30px for double lines)
-    tft.fillRect(5, 175, 94, 25, 0x02D7);  // Blue button
-    tft.setTextColor(TFT_WHITE, 0x02D7);
-    tft.loadFont(ATR12); // Using a slightly smaller font for better fit if needed
     tft.setTextDatum(MC_DATUM);
 
-    // --- Dynamic Line Splitting Logic ---
+    // 2. Weather Page Button (Top)
+    // Blue background for consistency
+    tft.fillRect(5, 130, 94, 22, 0x02D7);
+    tft.loadFont(ATR12);
+    tft.setTextColor(TFT_WHITE, 0x02D7);
+    tft.drawString(WEATHER_BTN, 52, 141);  // You can use a constant like WEATHER_BTN
+
+    // 3. System Page Button (Middle)
+    tft.fillRect(5, 155, 94, 22, 0x02D7);
+    tft.drawString(SYSTEM_BTN, 52, 166);
+
+    // 4. Restart Button (Bottom)
+    // Red or distinct blue to indicate action
+
+    tft.fillRect(5, 180, 94, 22, 0x02D7);
     String text = String(TXT_RESTART);
     int newLinePos = text.indexOf('\n');
-
     if (newLinePos != -1) {
-        // If \n exists, split the text and draw as two lines
-        String firstLine = text.substring(0, newLinePos);
-        String secondLine = text.substring(newLinePos + 1);
-
-        tft.drawString(firstLine, 52, 183);   // First line slightly higher
-        tft.drawString(secondLine, 52, 196);  // Second line slightly lower
+      tft.drawString(text.substring(0, newLinePos), 52, 186);
+      tft.drawString(text.substring(newLinePos + 1), 52, 195);
     } else {
-        // If no \n (e.g., English "Restart"), draw as single line in the center
-        tft.drawString(text, 52, 190);
+      tft.drawString(text, 52, 191);
     }
-    tft.unloadFont();
 
-    // 3. Status Text or Other Info
-    tft.loadFont(ATR16);
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(TFT_WHITE, 0x10A2); // Background color matches menu
-    tft.setTextPadding(90);
-    tft.drawString("System", 52, 135);
-    tft.drawString("v2.0 Beta", 52, 155);
-
-    // 4. Cleanup and State Update
+    // 5. State Management
     isMenuOpen = true;
     tft.unloadFont();
     tft.setTextPadding(0);
-    tft.setTextDatum(TL_DATUM); // Reset to default top-left alignment
-}
+    tft.setTextDatum(TL_DATUM);
+  }
 
   void hideStartMenu(TFT_eSPI &tft) {
     // Clear menu area with black
@@ -147,22 +144,32 @@ public:
     tft.unloadFont();
   }
 
-  void updateWeather(TFT_eSPI &tft, float temp, float hum) {
+  void drawWeatherPage(TFT_eSPI &tft) {
+    tft.loadFont(ATR20);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);  // White for labels
+    tft.setTextDatum(TL_DATUM);
+
+    // Draw the static labels once
+    tft.drawString(String(TXT_TEMP) + ":", 10, 35);
+    tft.drawString(String(TXT_HUM) + ":", 200, 35);
 
     tft.unloadFont();
+  }
 
-    // 1. Set stable font settings
+  // --- Dynamic Data Only ---
+  void updateWeather(TFT_eSPI &tft, float temp, float hum) {
     tft.loadFont(ATR20);
+    tft.setTextColor(0x04DF, TFT_BLACK);  // Cyan for values
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(0x04DF, TFT_BLACK);
 
-    // Temperature (Anti-flicker: providing background color)
-    tft.setTextPadding(tft.textWidth(String(TXT_TEMP) + ": 88.8 °C  "));
-    tft.drawString(String(TXT_TEMP) + ": " + String(temp, 1) + " °C", 10, 35);
+    // Update Temperature Value
+    // We start drawing after the label "Temp: " (roughly at X: 80-90 depending on font)
+    tft.setTextPadding(tft.textWidth("88.8 °C"));
+    tft.drawString(String(temp, 1) + " °C", 90, 35);
 
-    // Humidity
-    tft.setTextPadding(tft.textWidth(String(TXT_HUM) + ": %100   "));
-    tft.drawString(String(TXT_HUM) + ": %" + String(hum, 0), 200, 35);
+    // Update Humidity Value
+    tft.setTextPadding(tft.textWidth("%100"));
+    tft.drawString("%" + String(hum, 0), 260, 35);
 
     tft.unloadFont();
     tft.setTextPadding(0);
@@ -204,21 +211,23 @@ public:
     tft.setTextPadding(tft.textWidth("88:88:88"));
     tft.setTextColor(TFT_WHITE, 0x0112);
     tft.drawString(fullTime, 227, 90);
+
+    tft.setTextColor(TFT_WHITE, 0x0112);
+    tft.setTextPadding(tft.textWidth("88/88/8888"));
+    tft.drawString(date, 227, 125);
     tft.unloadFont();
-    // Date (Medium)
+
+    // Day Name (From language.h)
+    tft.loadFont(ATR20);
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(TFT_WHITE, 0x0112);
+    tft.setTextPadding(tft.textWidth("          "));
+    tft.drawString(day, 227, 155);
+    tft.unloadFont();
 
     tft.loadFont(ATR16);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(TFT_WHITE, 0x0112);
-    tft.setTextPadding(tft.textWidth("88/88/8888"));
-    tft.drawString(date, 227, 125);
-
-    // Day Name (From language.h)
-    tft.setTextColor(TFT_WHITE, 0x0112);
-    tft.setTextPadding(tft.textWidth("          "));
-    tft.drawString(day, 227, 155);
-
-    tft.setTextColor(0x04DF, 0x0112);
     tft.setTextPadding(160);
     tft.drawString(ssid, 227, 185);
     tft.unloadFont();
@@ -240,7 +249,7 @@ public:
       tft.setTextColor(0x0112, TFT_BLACK);
       tft.setTextDatum(MC_DATUM);
 
-      tft.drawString("SYSTEM UPDATE", 160, 80);
+      tft.drawString(String(SYS_UPDATE), 160, 80);
       tft.unloadFont();
       // Draw progress bar frame
       tft.drawRect(60, 110, 200, 20, TFT_WHITE);
@@ -258,7 +267,8 @@ public:
     tft.drawString(String(progress) + "%", 160, 140);
 
     tft.setTextPadding(0);
-    tft.drawString("Don't power off", 160, 170);
+    tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+    tft.drawString(String(TXT_UPDATE_NO_POWER), 160, 170);
 
     tft.unloadFont();
   }
@@ -288,6 +298,49 @@ public:
       uint16_t color = (i <= signalLevel) ? activeColor : inactiveColor;
       tft.fillRect(x_pos, y_bottom - current_bar_h, bar_w, current_bar_h, color);
     }
+  }
+
+  /* * Draws the System Properties page content.
+   * Displays static device information using custom fonts.
+   */
+  void drawSystemPage(TFT_eSPI &tft) {
+    // 1. Drawing the "Computer" or "System" Icon Placeholder
+    drawSDImage(tft, "/start.bmp", 15, 45, 32, 32);
+
+    tft.loadFont(ATR16);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextDatum(TL_DATUM);
+
+    // 2. Hardware Section
+    int startY = 45;
+    int lineSpacing = 19;
+
+    tft.setTextColor(0x04DF, TFT_BLACK);  // Cyan for the main title
+    tft.drawString("NetTime Pro " + String(TXT_CONSOLE), 80, startY);
+
+    tft.unloadFont();
+    tft.loadFont(ATR12);
+
+    // IP and Connection Info
+    tft.drawString(String(TXT_NET) + ": " + WiFi.SSID(), 80, startY + lineSpacing);
+    tft.drawString("IP: " + WiFi.localIP().toString(), 80, startY + (lineSpacing * 2));
+
+    // 3. Visual Separator Line
+    tft.drawFastHLine(15, 120, 290, 0x319F);
+
+    // 4. Memory and Storage Info
+    // Using KB and MB for a more technical look
+    tft.drawString(String(SYS_RAM) + ": " + String(ESP.getFreeHeap() / 1024.0, 1) + " KB", 20, 130);
+    tft.drawString(String(SYS_FLASH) + ": " + String(ESP.getFlashChipRealSize() / (1024.0 * 1024.0), 1) + " MB", 20, 130 + lineSpacing);
+    tft.drawString(String(SYS_CPU) + ": " + String(ESP.getCpuFreqMHz()) + " MHz", 20, 130 + (lineSpacing * 2));
+
+    // 5. Version Info (Moved from Start Menu to here)
+    tft.setTextDatum(BC_DATUM);
+    tft.drawString("NetTime OS v2.1.0-beta (2026)", 160, 200);
+
+    // Cleanup
+    tft.unloadFont();
+    tft.setTextDatum(TL_DATUM);  // Restore default alignment
   }
 };
 #endif

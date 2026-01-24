@@ -54,9 +54,9 @@ public:
     });
 
     ArduinoOTA.onEnd([&tft, &display]() {
-      tft.fillScreen(TFT_GREEN);
-      tft.setTextColor(TFT_BLACK);
-      tft.drawString("SUCCESS! REBOOTING...", 160, 120);
+      tft.fillScreen(TFT_BLACK);
+      tft.setTextColor(TFT_GREEN);
+      tft.drawString(String(TXT_UPDATE_SUCCESS), 160, 120);
     });
 
     ArduinoOTA.begin();

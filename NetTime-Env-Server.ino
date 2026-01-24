@@ -19,7 +19,15 @@ unsigned long lastClockUpdate = 0;
 unsigned long lastSensorUpdate = 0;
 unsigned long lastFirebaseSync = 0;
 unsigned long lastUIUpdate = 0;
-int currentPage = -1, activePage;
+
+enum Page {
+  NONE,          //Initial state
+  WEATHER_PAGE,  // Main dashboard with clock and sensors
+  SYSTEM_PAGE    // System Properties and device info
+};
+
+Page currentPage = NONE;
+
 
 void setup() {
   Serial.begin(115200);
@@ -27,7 +35,7 @@ void setup() {
   digitalWrite(TFT_LED, HIGH);
 
   if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
-    Serial.println("SD Kart Hatası!");
+    Serial.println("SD Card Error!");
   }
 
   displayBox.init(tft);
@@ -41,92 +49,162 @@ void setup() {
 
   tft.fillScreen(TFT_BLACK);
   displayBox.drawTaskbar(tft);
+  switchPage(WEATHER_PAGE);
 }
 
 void loop() {
   netBox.handleOTA();
 
-  // 1. Clock Update (Every 1 second) - Smooth
-  if (millis() - lastClockUpdate >= 1000) {
-    lastClockUpdate = millis();
-    displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
-  }
+  // Unified UI and Sensor Update (Every 1 second)
+  if (millis() - lastUIUpdate >= 1000) {
+    lastUIUpdate = millis();
 
-  if (millis() - lastSensorUpdate >= 1000) {
-    lastSensorUpdate = millis();
+    // --- 1. SENSORS (Background) ---
     DHT.read(DHTPIN);
+    float currentTemp = (float)DHT.temperature;
+    float currentHum = (float)DHT.humidity;
+
+    // --- 2. GLOBAL UI (Taskbar - Always Visible) ---
+    displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
+    displayBox.drawWifiIcon(tft, netBox.getSignalLevel());
+
+    // --- 3. PAGE-SPECIFIC UI ---
+    if (currentPage == WEATHER_PAGE) {
+      displayBox.updateWeather(tft, currentTemp, currentHum);
+
+      if (displayBox.isClockExpanded) {
+        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
+                                     timeBox.getDayName(), WiFi.SSID());
+      }
+    } else if (currentPage == SYSTEM_PAGE) {
+      // You can call a small update function here for live system stats if needed
+      // displayBox.updateSystemStats(tft);
+    }
   }
 
-  // 3. Firebase Update (Every 20 seconds) - Optimized
+  // --- 4. FIREBASE SYNC (Every 20 seconds) ---
   if (millis() - lastFirebaseSync >= 20000) {
     lastFirebaseSync = millis();
-    netBox.updateFirebase(
-      (float)DHT.temperature, (float)DHT.humidity,
-      timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp());
+    netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
+                          timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp());
   }
 
+  // --- 5. TOUCH CONTROLS ---
+  handleInput();
+}
+
+void handleInput() {
   uint16_t x, y;
   if (touchBox.isPressed(tft, x, y)) {
-    // 1. Check if Start Icon (Bottom-Left) is pressed
-    // Area: x[0-50], y[210-240]
-    x = 320 - x;
+    x = 320 - x;  // Adjust for screen rotation
 
+    // Start Button Logic
     if (x < 50 && y > 205) {
       if (!displayBox.isMenuOpen) {
         displayBox.drawStartMenu(tft);
       } else {
         displayBox.hideStartMenu(tft);
+        repairPage();
       }
-      delay(300);  // Debounce
+      delay(250);
+      return;
     }
-    // 2. Check Taskbar Clock Area (Right side)
+
+    // Taskbar Clock Logic
     if (x > 240 && y > 205) {
       if (!displayBox.isClockExpanded) {
-
-        String currentSsid = WiFi.SSID();
-        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getDayName(), currentSsid, true);
+        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
+                                     timeBox.getDayName(), WiFi.SSID(), true);
       } else {
         displayBox.hideExpandedClock(tft);
+        repairPage();
       }
-      delay(300);
+      delay(250);
     }
 
-    // 3. Check if RESTART button is pressed (When menu is open)
+    // Inside Start Menu Actions
     if (displayBox.isMenuOpen) {
-      // Area: x[5-99], y[175-200]
-      if (x > 4 && x < 100 && y > 174 && y < 201) {
-        tft.fillScreen(TFT_BLACK);
-        tft.setTextColor(TFT_RED);
+
+      //WEATHER PAGE BUTTON (Check coordinates based on your menu layout)
+      if (x > 5 && x < 100 && y > 130 && y < 152) {
+        displayBox.hideStartMenu(tft);
+        switchPage(WEATHER_PAGE);
+      }
+
+      // SYSTEM PAGE BUTTON
+      if (x > 5 && x < 100 && y > 155 && y < 177) {
+        displayBox.hideStartMenu(tft);
+        switchPage(SYSTEM_PAGE);
+      }
+
+      // RESTART BUTTON
+      if (x > 4 && x < 100 && y > 180 && y < 202) {
+        tft.fillRect(0, 0, 320, 240, 0x0063);
+        tft.unloadFont();
+        tft.loadFont(ATR28);
         tft.setTextDatum(MC_DATUM);
-        tft.drawString("REBOOTING...", 160, 120, 2);
-        delay(1000);
-        ESP.restart();  // Software Reset
+        tft.setTextColor(TFT_WHITE);
+        String text = String(SYS_REBOOTING);
+        int newLinePos = text.indexOf('\n');
+        if (newLinePos != -1) {
+          tft.drawString(text.substring(0, newLinePos), 160, 106);
+          tft.drawString(text.substring(newLinePos + 1), 160, 136);
+        } else {
+          tft.drawString(text, 160, 120);
+        }
+        SD.end();
+        WiFi.disconnect(true);
+        WiFi.mode(WIFI_OFF);
+        delay(500);
+        ESP.restart();
       }
     }
   }
-  if (millis() - lastUIUpdate >= 1000) {
-    lastUIUpdate = millis();
+}
 
-    // Get current signal level
-    int wifiLevel = netBox.getSignalLevel();
-    String currentSSID = WiFi.SSID();
+/* * Force redraws the current UI components to repair the screen 
+ * after a menu or overlay is closed.
+ */
+void repairPage() {
+  // Clear only the workspace (between Header and Taskbar)
+  tft.fillRect(0, 30, 320, 175, TFT_BLACK);
 
+  if (currentPage == WEATHER_PAGE) {
+    displayBox.drawWeatherPage(tft);
+    // Immediately fill with current sensor data
     displayBox.updateWeather(tft, (float)DHT.temperature, (float)DHT.humidity);
-    // Update Clock and Wifi Icon
-    displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
-    displayBox.drawWifiIcon(tft, wifiLevel);
-
-    // If expanded clock is open, maybe show signal there too
-    if (displayBox.isClockExpanded) {
-      displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getDayName(), currentSSID);
-    }
+  } else if (currentPage == SYSTEM_PAGE) {
+    displayBox.drawSystemPage(tft);
   }
+}
 
-  if (currentPage != activePage) {
-    if (activePage == 0) displayBox.drawHeader(tft, WEATHER_TITLE, 0x0063, 0xffff);
-    else if (activePage == 1) displayBox.drawHeader(tft, SETTINGS_TITLE, 0x18c3, 0xffff);
-    else if (activePage == 2) displayBox.drawHeader(tft, ABOUT_TITLE, 0x18c3, 0xffff);
+void switchPage(Page targetPage) {
+  if (currentPage == targetPage) return;
 
-    currentPage = activePage;
+  currentPage = targetPage;
+
+  /* Clear only the workspace (Above the taskbar) 
+       This prevents taskbar flickering */
+  tft.fillRect(0, 0, 320, 205, TFT_BLACK);
+
+  switch (currentPage) {
+    case WEATHER_PAGE:
+      displayBox.isClockExpanded = false;
+      displayBox.isMenuOpen = false;
+
+      displayBox.drawHeader(tft, WEATHER_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawWeatherPage(tft);
+      break;
+
+    case SYSTEM_PAGE:
+      displayBox.isClockExpanded = false;
+      displayBox.isMenuOpen = false;
+
+      displayBox.drawHeader(tft, SYSTEM_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawSystemPage(tft);
+      break;
+    case NONE:
+      // This case usually stays empty as it's just a transition state
+      break;
   }
 }

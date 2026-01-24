@@ -1,4 +1,4 @@
-# 🕒 NetTime-Env-Server V2.0.0 🌐
+# 🕒 NetTime-Env-Server V2.1.0-beta 🌐
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
 ### "The NetTime OS - Premium TFT Edition"
 
@@ -11,12 +11,11 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.0.0
+## 🚀 What's New in v2.1.0-beta
 
-- **NetTime OS UI:** Interactive GUI featuring a Taskbar, Start Menu, and System Tray.
-- **2.8" TFT Display:** Vibrant 320x240 color dashboard replacing the legacy OLED.
-- **Touch Interaction:** Navigate menus and trigger system commands (e.g., Reboot) via touch.
-- **Modular Architecture:** Clean code structure using dedicated Manager classes.
+- **System Console:** Advanced real-time monitoring of Heap Memory, CPU Frequency, Flash storage, and Network status.
+- **Safe Shutdown Protocol:** A professional "Clean Shutdown" sequence that safely unmounts the SD Card and deactivates WiFi/SPI radios before rebooting.
+- **Multi-Language Core:** Dynamic localization support (EN/TR) managed via a single header file and extended.
 - **Visual OTA:** Live progress bar on the screen during wireless updates.
 
 ## 📂 Project Structure
