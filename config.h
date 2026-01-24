@@ -27,4 +27,12 @@
 
 #ifndef DHTLIB_OK
 #define DHTLIB_OK 0
+
+//Definition of Pages
+enum Page {
+  NONE,          //Initial state
+  WEATHER_PAGE,  // Main dashboard with clock and sensors
+  SYSTEM_PAGE    // System Properties and device info
+};
+
 #endif

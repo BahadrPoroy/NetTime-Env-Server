@@ -20,14 +20,10 @@ unsigned long lastSensorUpdate = 0;
 unsigned long lastFirebaseSync = 0;
 unsigned long lastUIUpdate = 0;
 
-enum Page {
-  NONE,          //Initial state
-  WEATHER_PAGE,  // Main dashboard with clock and sensors
-  SYSTEM_PAGE    // System Properties and device info
-};
-
 Page currentPage = NONE;
 
+float currentTemp;
+float currentHum;
 
 void setup() {
   Serial.begin(115200);
@@ -61,8 +57,8 @@ void loop() {
 
     // --- 1. SENSORS (Background) ---
     DHT.read(DHTPIN);
-    float currentTemp = (float)DHT.temperature;
-    float currentHum = (float)DHT.humidity;
+    currentTemp = (float)DHT.temperature;
+    currentHum = (float)DHT.humidity;
 
     // --- 2. GLOBAL UI (Taskbar - Always Visible) ---
     displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
@@ -103,8 +99,7 @@ void handleInput() {
       if (!displayBox.isMenuOpen) {
         displayBox.drawStartMenu(tft);
       } else {
-        displayBox.hideStartMenu(tft);
-        repairPage();
+        displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
       }
       delay(250);
       return;
@@ -116,10 +111,10 @@ void handleInput() {
         displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
                                      timeBox.getDayName(), WiFi.SSID(), true);
       } else {
-        displayBox.hideExpandedClock(tft);
-        repairPage();
+        displayBox.hideExpandedClock(tft, currentPage, currentTemp, currentHum);
       }
       delay(250);
+      return;
     }
 
     // Inside Start Menu Actions
@@ -127,14 +122,16 @@ void handleInput() {
 
       //WEATHER PAGE BUTTON (Check coordinates based on your menu layout)
       if (x > 5 && x < 100 && y > 130 && y < 152) {
-        displayBox.hideStartMenu(tft);
         switchPage(WEATHER_PAGE);
+        delay(250);
+        return;
       }
 
       // SYSTEM PAGE BUTTON
       if (x > 5 && x < 100 && y > 155 && y < 177) {
-        displayBox.hideStartMenu(tft);
         switchPage(SYSTEM_PAGE);
+        delay(250);
+        return;
       }
 
       // RESTART BUTTON
@@ -165,46 +162,31 @@ void handleInput() {
 /* * Force redraws the current UI components to repair the screen 
  * after a menu or overlay is closed.
  */
-void repairPage() {
-  // Clear only the workspace (between Header and Taskbar)
-  tft.fillRect(0, 30, 320, 175, TFT_BLACK);
-
-  if (currentPage == WEATHER_PAGE) {
-    displayBox.drawWeatherPage(tft);
-    // Immediately fill with current sensor data
-    displayBox.updateWeather(tft, (float)DHT.temperature, (float)DHT.humidity);
-  } else if (currentPage == SYSTEM_PAGE) {
-    displayBox.drawSystemPage(tft);
-  }
-}
 
 void switchPage(Page targetPage) {
-  if (currentPage == targetPage) return;
-
+  if (currentPage == targetPage) {
+    displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
+    return;
+  }
   currentPage = targetPage;
-
-  /* Clear only the workspace (Above the taskbar) 
-       This prevents taskbar flickering */
+  displayBox.isMenuOpen = false;
+  displayBox.isClockExpanded = false;
+  /* Clear only the workspace (Above the taskbar)
+  This prevents taskbar flickering */
   tft.fillRect(0, 0, 320, 205, TFT_BLACK);
 
   switch (currentPage) {
     case WEATHER_PAGE:
-      displayBox.isClockExpanded = false;
-      displayBox.isMenuOpen = false;
-
       displayBox.drawHeader(tft, WEATHER_TITLE, 0x0063, 0xFFFF);
       displayBox.drawWeatherPage(tft);
       break;
 
     case SYSTEM_PAGE:
-      displayBox.isClockExpanded = false;
-      displayBox.isMenuOpen = false;
-
       displayBox.drawHeader(tft, SYSTEM_TITLE, 0x0063, 0xFFFF);
       displayBox.drawSystemPage(tft);
       break;
-    case NONE:
-      // This case usually stays empty as it's just a transition state
+
+    default:
       break;
   }
 }

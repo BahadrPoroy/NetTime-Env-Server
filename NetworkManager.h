@@ -53,10 +53,29 @@ public:
       }
     });
 
-    ArduinoOTA.onEnd([&tft, &display]() {
+    ArduinoOTA.onEnd([&tft]() {
       tft.fillScreen(TFT_BLACK);
-      tft.setTextColor(TFT_GREEN);
-      tft.drawString(String(TXT_UPDATE_SUCCESS), 160, 120);
+      tft.loadFont(ATR16);
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.setTextDatum(MC_DATUM);
+      tft.setTextPadding(300);  // Ekran genişliğine yakın padding
+
+      String text = String(TXT_UPDATE_SUCCESS);
+      int newLinePos = text.indexOf('\n');
+
+      if (newLinePos != -1) {
+        // Eğer metinde \n varsa iki parça halinde yaz
+        tft.drawString(text.substring(0, newLinePos), 160, 110);
+        tft.drawString(text.substring(newLinePos + 1), 160, 140);
+      } else if (tft.textWidth(text) > 300) {
+        // Metin çok uzunsa ve \n yoksa, ortadan böl (veya sen dile göre manuel ayarla)
+        tft.drawString(text, 160, 120);
+      } else {
+        tft.drawString(text, 160, 120);
+      }
+
+      tft.setTextPadding(0);
+      tft.unloadFont();
     });
 
     ArduinoOTA.begin();
@@ -86,12 +105,11 @@ public:
 
   int getSignalLevel() {
     long rssi = WiFi.RSSI();
-    if (rssi > -55) return 4;      // Excellent
-    else if (rssi > -70) return 3; // Good
-    else if (rssi > -85) return 2; // Fair
-    else if (rssi > -100) return 1;// Weak
-    return 0;                      // No signal
-}
-
+    if (rssi > -55) return 4;        // Excellent
+    else if (rssi > -70) return 3;   // Good
+    else if (rssi > -85) return 2;   // Fair
+    else if (rssi > -100) return 1;  // Weak
+    return 0;                        // No signal
+  }
 };
 #endif

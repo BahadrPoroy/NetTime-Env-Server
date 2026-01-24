@@ -6,7 +6,7 @@
 #include <LittleFS.h>
 #include <ESP8266WiFi.h>  // Required to use the WiFi object inside this class
 #include "language.h"
-#include "myFonts.h"
+#include "Fonts/myFonts.h"
 
 class DisplayManager {
 private:
@@ -120,10 +120,12 @@ public:
     tft.setTextDatum(TL_DATUM);
   }
 
-  void hideStartMenu(TFT_eSPI &tft) {
+  void hideStartMenu(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
     // Clear menu area with black
-    tft.fillRect(2, 120, 100, 85, TFT_BLACK);
+    tft.setViewport(2, 125, 100, 80, false);
     isMenuOpen = false;
+    repairPage(tft, currentPage, temp, hum);
+    tft.resetViewport();
   }
 
   void drawTaskbar(TFT_eSPI &tft) {
@@ -234,45 +236,39 @@ public:
     isClockExpanded = true;
   }
 
-  void hideExpandedClock(TFT_eSPI &tft) {
-    tft.fillRect(140, 65, 177, 140, TFT_BLACK);
+  void hideExpandedClock(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
+    tft.setViewport(140, 65, 175, 140, false);
     isClockExpanded = false;
+    repairPage(tft, currentPage, temp, hum);
+    tft.resetViewport();
   }
-
-  // Add this inside DisplayManager class in DisplayManager.h
 
   void showUpdateScreen(TFT_eSPI &tft, int progress) {
-    // Standard size fonts to ensure they fit 320px width
+
+    tft.loadFont(ATR16);
+    tft.setTextDatum(MC_DATUM);
+
     if (progress == 0) {
       tft.fillScreen(TFT_BLACK);
-      tft.loadFont(ATR16);
-      tft.setTextColor(0x0112, TFT_BLACK);
-      tft.setTextDatum(MC_DATUM);
-
+      tft.setTextColor(TFT_CYAN, TFT_BLACK);
       tft.drawString(String(SYS_UPDATE), 160, 80);
-      tft.unloadFont();
-      // Draw progress bar frame
+
       tft.drawRect(60, 110, 200, 20, TFT_WHITE);
+
+      tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+      tft.drawString(String(TXT_UPDATE_NO_POWER), 160, 170);
     }
 
-    // Fill progress bar
     tft.fillRect(62, 112, (progress * 196) / 100, 16, 0x0112);
 
-    // Small percentage text below the bar
-    tft.loadFont(ATR8);
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
 
-    tft.setTextPadding(tft.textWidth("100% "));
-    tft.drawString(String(progress) + "%", 160, 140);
+    tft.setTextPadding(tft.textWidth("100%"));
+    tft.drawString(String(progress) + "%", 165, 140);
 
     tft.setTextPadding(0);
-    tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-    tft.drawString(String(TXT_UPDATE_NO_POWER), 160, 170);
-
     tft.unloadFont();
   }
-
   void drawWifiIcon(TFT_eSPI &tft, int signalLevel) {
     // Positioning
     const int x_base = 225;
@@ -341,6 +337,19 @@ public:
     // Cleanup
     tft.unloadFont();
     tft.setTextDatum(TL_DATUM);  // Restore default alignment
+  }
+
+  void repairPage(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
+    // Clear only the workspace (between Header and Taskbar)
+    tft.fillRect(0, 0, 320, 240, TFT_BLACK);
+
+    if (currentPage == WEATHER_PAGE) {
+      drawWeatherPage(tft);
+      // Immediately fill with current sensor data
+      updateWeather(tft, temp, hum);
+    } else if (currentPage == SYSTEM_PAGE) {
+      drawSystemPage(tft);
+    }
   }
 };
 #endif
