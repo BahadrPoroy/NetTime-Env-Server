@@ -8,6 +8,8 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
+#define VERSION "NetTime OS v2.2.0-beta (2026)"
+
 class DisplayManager {
 private:
   unsigned long lastAnimMillis = 0;
@@ -121,9 +123,8 @@ public:
   }
 
   void hideStartMenu(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
-    // Clear menu area with black
-    tft.setViewport(2, 125, 100, 80, false);
     isMenuOpen = false;
+    tft.setViewport(2, 125, 100, 80, false);
     repairPage(tft, currentPage, temp, hum);
     tft.resetViewport();
   }
@@ -187,13 +188,13 @@ public:
     // Time on Taskbar (Top row of tray)
     // Show only HH:MM for tray, keep it clean
     tft.setTextPadding(tft.textWidth("88:88"));
-    tft.drawString(timeStr.substring(0, 5), 315, 206);
+    tft.drawString(timeStr.substring(0, 5), 315, 208);
 
     // Date on Taskbar (Bottom row of tray)
     tft.loadFont(ATR12);
     tft.setTextDatum(TR_DATUM);
     tft.setTextPadding(tft.textWidth("88/88/8888"));
-    tft.drawString(dateStr, 315, 224);
+    tft.drawString(dateStr, 315, 226);
 
     tft.setTextDatum(TL_DATUM);  // Reset
     tft.unloadFont();
@@ -237,8 +238,8 @@ public:
   }
 
   void hideExpandedClock(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
-    tft.setViewport(140, 65, 175, 140, false);
     isClockExpanded = false;
+    tft.setViewport(140, 65, 175, 140, false);
     repairPage(tft, currentPage, temp, hum);
     tft.resetViewport();
   }
@@ -264,7 +265,7 @@ public:
     tft.setTextColor(TFT_CYAN, TFT_BLACK);
 
     tft.setTextPadding(tft.textWidth("100%"));
-    tft.drawString(String(progress) + "%", 165, 140);
+    tft.drawString(String(progress) + "%", 160, 145);
 
     tft.setTextPadding(0);
     tft.unloadFont();
@@ -296,51 +297,84 @@ public:
     }
   }
 
-  /* * Draws the System Properties page content.
-   * Displays static device information using custom fonts.
+  /* * * Draws the System Properties page content.
+   * Displays static device information.
    */
   void drawSystemPage(TFT_eSPI &tft) {
-    // 1. Drawing the "Computer" or "System" Icon Placeholder
+    // Draw the static system icon
     drawSDImage(tft, "/start.bmp", 15, 45, 32, 32);
 
     tft.loadFont(ATR16);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextDatum(TL_DATUM);
 
-    // 2. Hardware Section
     int startY = 45;
     int lineSpacing = 19;
 
-    tft.setTextColor(0x04DF, TFT_BLACK);  // Cyan for the main title
+    // Header section
+    tft.setTextColor(0x04DF, TFT_BLACK);
     tft.drawString("NetTime Pro " + String(TXT_CONSOLE), 80, startY);
 
     tft.unloadFont();
     tft.loadFont(ATR12);
 
-    // IP and Connection Info
+    // Network Info (Static)
     tft.drawString(String(TXT_NET) + ": " + WiFi.SSID(), 80, startY + lineSpacing);
     tft.drawString("IP: " + WiFi.localIP().toString(), 80, startY + (lineSpacing * 2));
 
-    // 3. Visual Separator Line
+    // Visual separator
     tft.drawFastHLine(15, 120, 290, 0x319F);
 
-    // 4. Memory and Storage Info
-    // Using KB and MB for a more technical look
-    tft.drawString(String(SYS_RAM) + ": " + String(ESP.getFreeHeap() / 1024.0, 1) + " KB", 20, 130);
-    tft.drawString(String(SYS_FLASH) + ": " + String(ESP.getFlashChipRealSize() / (1024.0 * 1024.0), 1) + " MB", 20, 130 + lineSpacing);
-    tft.drawString(String(SYS_CPU) + ": " + String(ESP.getCpuFreqMHz()) + " MHz", 20, 130 + (lineSpacing * 2));
+    // Hardware Stats Section (Static labels)
+    int statsY = 130;
+    tft.drawString(String(SYS_RAM) + ": ", 40, statsY);
+    tft.drawRect(180, statsY - 6, 100, 12, 0x04DF);  // RAM Bar Frame
 
-    // 5. Version Info (Moved from Start Menu to here)
+    uint32_t flashSize = ESP.getFlashChipRealSize();
+    tft.setTextDatum(TC_DATUM);
+    tft.drawString(String(SYS_FLASH) + ": " + String(flashSize / 1048576) + " MB", 160, statsY + lineSpacing);
+
+    tft.drawString(String(SYS_CPU) + ": " + String(ESP.getCpuFreqMHz()) + " MHz", 160, statsY + (lineSpacing * 2));
+
+    // Footer Version Info
     tft.setTextDatum(BC_DATUM);
-    tft.drawString("NetTime OS v2.1.0-beta (2026)", 160, 200);
+    tft.drawString(String(VERSION), 160, 200);
 
-    // Cleanup
     tft.unloadFont();
-    tft.setTextDatum(TL_DATUM);  // Restore default alignment
+    tft.setTextPadding(0);
+    tft.setTextDatum(TL_DATUM);
+  }
+
+  /* * * Updates dynamic system data (RAM, CPU, Bar)
+   * This is called inside the loop when SYSTEM_PAGE is active.
+   */
+  void updateSystemStats(TFT_eSPI &tft, uint32_t freeHeap) {
+    tft.loadFont(ATR12);
+    tft.setTextColor(0x04DF, TFT_BLACK);  // Using original Cyan color
+    tft.setTextDatum(TL_DATUM);
+
+    int statsY = 130;  // Must match drawSystemPage
+    int ls = 19;       // Line spacing
+
+    // Update RAM Numeric Value (Positioned next to label)
+    tft.setTextPadding(tft.textWidth("88.8 KB"));
+    tft.drawString(String(freeHeap / 1024.0, 1) + " KB", 105, statsY);
+
+    // Update RAM Bar Fill (Mapped to 100px frame)
+    int barMax = 96;
+    int fillWidth = map(freeHeap, 0, 81920, 0, barMax);
+    if (fillWidth > barMax) fillWidth = barMax;
+
+    uint16_t barColor = (freeHeap < 15000) ? TFT_RED : TFT_GREEN;
+    // Clear previous bar and draw new one
+    tft.fillRect(182, statsY - 4, barMax, 8, TFT_BLACK);
+    tft.fillRect(182, statsY - 4, fillWidth, 8, barColor);
+
+    tft.unloadFont();
+    tft.setTextPadding(0);
   }
 
   void repairPage(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
-    // Clear only the workspace (between Header and Taskbar)
+
     tft.fillRect(0, 0, 320, 240, TFT_BLACK);
 
     if (currentPage == WEATHER_PAGE) {

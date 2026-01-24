@@ -27,6 +27,7 @@
 #define TXT_UPDATE_NO_POWER "Gücü Kapatmayın"
 #define TXT_UPDATE_SUCCESS "Güncelleme başarılı\nYeniden Başlatılıyor..."
 #define SYS_REBOOTING "YENİDEN\nBAŞLATILIYOR..."
+#define SYS_STORAGE "Boş Depolama"
 const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi" };
 #else
 // --- English ---
@@ -51,6 +52,7 @@ const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe",
 #define TXT_UPDATE_NO_POWER "Don't power off"
 #define TXT_UPDATE_SUCCESS "SUCCESS! REBOOTING..."
 #define SYS_REBOOTING "REBOOTING..."
+#define SYS_STORAGE "Free Storage"
 const char* days[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 #endif
 

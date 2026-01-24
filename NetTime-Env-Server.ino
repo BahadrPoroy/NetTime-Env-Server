@@ -65,6 +65,7 @@ void loop() {
     displayBox.drawWifiIcon(tft, netBox.getSignalLevel());
 
     // --- 3. PAGE-SPECIFIC UI ---
+
     if (currentPage == WEATHER_PAGE) {
       displayBox.updateWeather(tft, currentTemp, currentHum);
 
@@ -74,7 +75,12 @@ void loop() {
       }
     } else if (currentPage == SYSTEM_PAGE) {
       // You can call a small update function here for live system stats if needed
-      // displayBox.updateSystemStats(tft);
+      if (!displayBox.isClockExpanded) {
+        displayBox.updateSystemStats(tft, ESP.getFreeHeap());
+      } else {
+        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
+                                     timeBox.getDayName(), WiFi.SSID());
+      }
     }
   }
 
@@ -97,6 +103,8 @@ void handleInput() {
     // Start Button Logic
     if (x < 50 && y > 205) {
       if (!displayBox.isMenuOpen) {
+        if (displayBox.isClockExpanded)
+          displayBox.hideExpandedClock(tft, currentPage, currentTemp, currentHum);
         displayBox.drawStartMenu(tft);
       } else {
         displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
@@ -108,6 +116,8 @@ void handleInput() {
     // Taskbar Clock Logic
     if (x > 240 && y > 205) {
       if (!displayBox.isClockExpanded) {
+        if (displayBox.isMenuOpen)
+          displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
         displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
                                      timeBox.getDayName(), WiFi.SSID(), true);
       } else {
