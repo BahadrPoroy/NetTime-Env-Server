@@ -8,11 +8,12 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.2.0-beta (2026)"
+#define VERSION "NetTime OS v2.2.1-alpha (2026)"
 
 class DisplayManager {
 private:
   unsigned long lastAnimMillis = 0;
+  String lastDayName = "";
 
 public:
   /**
@@ -206,6 +207,7 @@ public:
     if (firstDraw) {
       tft.fillRect(140, 65, 175, 140, 0x0112);
       tft.drawRect(140, 65, 175, 140, 0x319F);
+      lastDayName = "";  // Reset tracker on first draw
     }
     tft.loadFont(ATR24);
     tft.setTextDatum(MC_DATUM);
@@ -224,8 +226,26 @@ public:
     tft.loadFont(ATR20);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(TFT_WHITE, 0x0112);
-    tft.setTextPadding(tft.textWidth("          "));
-    tft.drawString(day, 227, 155);
+
+    //- - - - - - - - - - -NEW- - - - - - - - - - -
+    
+    // Trigger cleanup only when the day actually changes
+    if (day != lastDayName) {
+      // Eski ve yeni günün piksel genişliklerini al
+      int oldW = tft.textWidth(lastDayName);
+      int newW = tft.textWidth(day);
+
+      // Use the wider of the two to ensure full clearance of previous text
+      tft.setTextPadding(max(oldW, newW));
+      tft.drawString(day, 227, 155);
+
+      lastDayName = day;  // Update tracker
+    } else {
+      // Standard draw with current width padding for stability
+      tft.setTextPadding(tft.textWidth(day));
+      tft.drawString(day, 227, 155);
+    }
+    //- - - - - - - - - - -NEW-END- - - - - - - - - - -
     tft.unloadFont();
 
     tft.loadFont(ATR16);
