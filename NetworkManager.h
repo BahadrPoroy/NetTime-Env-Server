@@ -13,7 +13,10 @@ private:
   FirebaseConfig config;
   FirebaseAuth auth;
   WiFiUDP udp;
-  const int udpPort = 4210;
+
+  //Seperated ports for diffrent purposes
+  const int OUTGOING_PORT = 4210;  //Sending port for Master
+  const int INCOMING_PORT = 4211;  //Listening port for Master
 
 public:
   void begin(TFT_eSPI &tft, DisplayManager &display) {
@@ -79,7 +82,7 @@ public:
     });
 
     ArduinoOTA.begin();
-    udp.begin(udpPort);
+    udp.begin(INCOMING_PORT);
   }
 
   void
@@ -94,7 +97,7 @@ public:
   void broadcastUDP(String message) {
     IPAddress broadcastIP = WiFi.localIP();
     broadcastIP[3] = 255;
-    udp.beginPacket(broadcastIP, udpPort);
+    udp.beginPacket(broadcastIP, OUTGOING_PORT); //Updated
     udp.write(message.c_str());
     udp.endPacket();
   }
