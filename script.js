@@ -16,9 +16,9 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 let currentLang = 'tr';
 const translations = {
     tr: {
-        title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", status_ok: "Canlı Veri Akışı Aktif", /* New--> */ waiting: "Bağlantı Bekleniyor..." /* <--New */, btn: "EN"
+        title: "NetTime Sunucusu", date: "Tarih", time: "Saat", temp: "Sıcaklık", hum: "Nem", isFed: "Yemleme Durumu", lastFed: "Yemleme Zamanı", status_ok: "Canlı Veri Akışı Aktif", /* New--> */ waiting: "Bağlantı Bekleniyor..." /* <--New */, btn: "EN"
     },
-    en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", status_ok: "Live Data Feed Active", /* New--> */ waiting: "Waiting For Connection..." /* <--New */, btn: "TR" }
+    en: { title: "NetTime Server", date: "Date", time: "Time", temp: "Temperature", hum: "Humidity", isFed: "Feeding Status", lastFed: "Feeding Time", status_ok: "Live Data Feed Active", /* New--> */ waiting: "Waiting For Connection..." /* <--New */, btn: "TR" }
 };
 const langBtn = document.getElementById('btn-lang');
 langBtn.addEventListener('click', () => {
@@ -32,6 +32,8 @@ function updateUI() {
     document.getElementById('lbl-time').innerText = t.time;
     document.getElementById('lbl-temp').innerText = t.temp;
     document.getElementById('lbl-hum').innerText = t.hum;
+    document.getElementById('lbl-isfed').innerText = t.isFed;
+    document.getElementById('lbl-fedtp').innerText = t.lastFed;
 
     const st = document.getElementById('status');
     if (isDataReceived) {
@@ -63,6 +65,13 @@ dataRef.on('value', (snapshot) => {
         isDataReceived = true; // Set flag to true when data arrives
         document.getElementById('tp').innerText = d.sicaklik ?? "--";
         document.getElementById('hm').innerText = d.nem ?? "--";
+        const isFedText = d.isFed
+            ? (currentLang === 'tr' ? "Beslendi" : "Fed")
+            : (currentLang === 'tr' ? "Yemleme Bekleniyor" : "Waiting for Feed");
+
+        document.getElementById('data-isfed').innerText = isFedText;
+        document.getElementById('data-fedtp').innerText = d.lastFedTime ?? "----";
+        document.getElementById('data-lastfed').innerText = d.lastFedTime ?? "----";
         
         const newTimestamp = d.timestamp;
 
