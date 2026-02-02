@@ -225,7 +225,7 @@ public:
 
   void hideStartMenu(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
     isMenuOpen = false;
-    tft.setViewport(2, 125, 100, 80, false);
+    tft.setViewport(2, 145, 100, 60, false);
     repairPage(tft, currentPage, temp, hum);
     tft.resetViewport();
   }
@@ -539,7 +539,6 @@ public:
     switch (currentPage) {
       case WEATHER_PAGE:
         drawWeatherPage(tft);
-        updateWeather(tft, temp, hum);
         break;
 
       case SYSTEM_PAGE:

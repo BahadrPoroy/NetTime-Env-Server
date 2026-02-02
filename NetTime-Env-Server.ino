@@ -124,107 +124,84 @@ void loop() {
 
 void handleInput() {
   uint16_t x, y;
-  if (touchBox.isPressed(tft, x, y)) {
-    x = 320 - x;  // Adjust for screen rotation
+  if (!touchBox.isPressed(tft, x, y)) return;
 
-    // Start Button Logic
-    if (x < 50 && y > 205) {
-      if (!displayBox.isMenuOpen) {
-        if (displayBox.isClockExpanded)
-          displayBox.hideExpandedClock(tft, currentPage, currentTemp, currentHum);
-        displayBox.drawStartMenu(tft);
-      } else {
-        displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
-      }
-      delay(250);
-      return;
-    }
+  x = 320 - x;  // Adjust for screen rotation
 
-    // Taskbar Clock Logic
-    if (x > 240 && y > 205) {
-      if (!displayBox.isClockExpanded) {
-        if (displayBox.isMenuOpen)
-          displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
-        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
-                                     timeBox.getDayName(), WiFi.SSID(), true);
-      } else {
+  // --- Start Button Logic ---
+  if (x < 50 && y > 205) {
+    if (!displayBox.isMenuOpen) {
+      if (displayBox.isClockExpanded)
         displayBox.hideExpandedClock(tft, currentPage, currentTemp, currentHum);
-      }
-      delay(250);
-      return;
-    }
-
-    // Inside Start Menu Actions
-    if (displayBox.isMenuOpen) {
-      // SYSTEM PAGE BUTTON
-      if (x > 5 && x < 100 && y > 155 && y < 177) {
-        switchPage(SYSTEM_PAGE);
-        delay(250);
-        return;
-      }
-
-      // RESTART BUTTON
-      if (x > 4 && x < 100 && y > 180 && y < 202) {
-        tft.fillRect(0, 0, 320, 240, 0x0063);
-        tft.unloadFont();
-        tft.loadFont(ATR28);
-        tft.setTextDatum(MC_DATUM);
-        tft.setTextColor(TFT_WHITE);
-        String text = String(SYS_REBOOTING);
-        int newLinePos = text.indexOf('\n');
-        if (newLinePos != -1) {
-          tft.drawString(text.substring(0, newLinePos), 160, 106);
-          tft.drawString(text.substring(newLinePos + 1), 160, 136);
-        } else {
-          tft.drawString(text, 160, 120);
-        }
-        SD.end();
-        WiFi.disconnect(true);
-        WiFi.mode(WIFI_OFF);
-        delay(500);
-        ESP.restart();
-      }
-    }
-    if (currentPage == DESKTOP_PAGE) {
-      if (y > 30 && y < 120) {
-
-        // 1. SYSTEM
-        if (x > 10 && x < 75) {
-          switchPage(SYSTEM_PAGE);
-        }
-        // 2. WEATHER
-        else if (x > 85 && x < 155) {
-          switchPage(WEATHER_PAGE);
-        }
-        // 3. FEEDER
-        else if (x > 165 && x < 235) {
-          switchPage(FEEDER_PAGE);
-        }
-        // 4. SETTINGS
-        else if (x > 245 && x < 315) {
-          // SETTING_PAGE is coming soon
-        }
-      }
-    } else if (currentPage == FEEDER_PAGE) {
-      if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
-        netBox.broadcastUDP("FEED_NOW");
-      }
-    }
-    if (x > 130 && x < 190 && y > 205) {
-      switchPage(DESKTOP_PAGE);
+      displayBox.drawStartMenu(tft);
+    } else {
+      displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
     }
   }
+
+  // --- Taskbar Clock Logic ---
+  else if (x > 240 && y > 205) {
+    if (!displayBox.isClockExpanded) {
+      if (displayBox.isMenuOpen)
+        displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
+      displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
+                                   timeBox.getDayName(), WiFi.SSID(), true);
+    } else {
+      displayBox.hideExpandedClock(tft, currentPage, currentTemp, currentHum);
+    }
+  }
+
+  // --- Start Menu Actions ---
+  else if (displayBox.isMenuOpen) {
+    if (x > 5 && x < 100 && y > 155 && y < 177) {
+      switchPage(SYSTEM_PAGE);
+    } else if (x > 4 && x < 100 && y > 180 && y < 202) {
+      tft.fillRect(0, 0, 320, 240, 0x0063);
+      tft.unloadFont();
+      tft.loadFont(ATR28);
+      tft.setTextDatum(MC_DATUM);
+      tft.setTextColor(TFT_WHITE);
+      String text = String(SYS_REBOOTING);
+      int newLinePos = text.indexOf('\n');
+      if (newLinePos != -1) {
+        tft.drawString(text.substring(0, newLinePos), 160, 106);
+        tft.drawString(text.substring(newLinePos + 1), 160, 136);
+      } else {
+        tft.drawString(text, 160, 120);
+      }
+      SD.end();
+      WiFi.disconnect(true);
+      WiFi.mode(WIFI_OFF);
+      ESP.restart();
+    }
+  }
+  // --- Page Specific Logic ---
+  else if (currentPage == DESKTOP_PAGE) {
+    if (y > 30 && y < 120) {
+      if (x > 10 && x < 75) switchPage(SYSTEM_PAGE);
+      else if (x > 85 && x < 155) switchPage(WEATHER_PAGE);
+      else if (x > 165 && x < 235) switchPage(FEEDER_PAGE);
+    }
+  } else if (currentPage == FEEDER_PAGE) {
+    if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
+      netBox.broadcastUDP("FEED_NOW");
+    }
+  }
+
+  // --- Global Taskbar Home Button ---
+  if (x > 130 && x < 190 && y > 205) {
+    switchPage(DESKTOP_PAGE);
+  }
+  delay(250);
 }
+
 
 /* * Force redraws the current UI components to repair the screen 
  * after a menu or overlay is closed.
  */
 
 void switchPage(Page targetPage) {
-  if (currentPage == targetPage) {
-    displayBox.hideStartMenu(tft, currentPage, currentTemp, currentHum);
-    return;
-  }
+  if (currentPage == targetPage) return;
   currentPage = targetPage;
   displayBox.isMenuOpen = false;
   displayBox.isClockExpanded = false;
