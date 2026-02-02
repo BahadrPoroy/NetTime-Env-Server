@@ -1,8 +1,11 @@
-# 🕒 NetTime-Env-Server V2.2.0-beta 🌐
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)  
+# 🕒 NetTime-Env-Server V2.3.0-alpha 🌐
+![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
+![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ### "The NetTime OS - Premium TFT Edition"
 
-## ⚠️ Note: Version 2.2.0 is currently in Beta. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
+## ⚠️ Note: Version 2.3.0 is currently in Alpha. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
 
 ## 📸 Media
 
@@ -18,13 +21,15 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.2.0-beta
+## 🚀 What's New in v2.3.0-alpha
 
-- **Live System Monitor:** Real-time RAM usage (with dynamic progress bar) and CPU frequency tracking.
-- **Improved UI Engine:** Exclusive modal management preventing overlapping between Start Menu and Expanded Clock.
-- **Optimized Rendering:** Zero-flicker updates using advanced text padding and viewport management.
-- **Multi-Language Core:** Enhanced localization support for all newly added pages and system variables. The core engine now seamlessly handles dynamic language switching across the entire UI.
-- **SD-Free UI Elements:** Faster interface response times by reducing SD card dependencies.
+- **Enhanced UDP Port Configuration:** Switched to separate ports for RX and TX. This separation minimizes potential collisions and improves connection stability.
+
+- **Evolution of UI/UX Framework:** Transitioned from a legacy list-based navigation to a modern, icon-driven Desktop interface. This update introduces a dedicated desktop home screen and an intuitive navigation engine for enhanced user accessibility.
+
+- **Persistent Feeding Logs & Universal State Template:** Automated synchronization of device states with Firebase, providing cross-device persistence and a scalable architecture for future IoT applications.
+
+## 🚧 Under Construction: The Home and Settings icons represent upcoming features. Navigation to these pages is currently restricted as we finalize the backend integration for these specific modules. ##
 
 ## 📂 Project Structure
 
@@ -42,7 +47,7 @@ The project has been refactored from a single-file script into a modular, header
 - **MCU:** ESP8266 (NodeMCU or Wemos D1 Mini)
 - **Sensor:** DHT11 / DHT22 (Temp & Humidity)
 - **Display:** 2.8" ILI9341 TFT display (SPI)
-- **Storage:** MicroSD Card (for assets)
+- **Storage:** MicroSD Card (for assets and fonts)
 
 ## 📡 Technology Stack
 - **Firmware:** Arduino IDE (C++), ArduinoJson, NTPClient.
