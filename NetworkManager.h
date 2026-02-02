@@ -85,19 +85,29 @@ public:
     udp.begin(INCOMING_PORT);
   }
 
-  void
-  updateFirebase(float temp, float hum, String time, String date, long ts) {
+  void updateFirebase(float temp, float hum, String time, String date, long ts, bool isFed, long lastFedTime) {
     Firebase.setFloat(firebaseData, "/NetTime/sicaklik", temp);
     Firebase.setFloat(firebaseData, "/NetTime/nem", hum);
     Firebase.setString(firebaseData, "/NetTime/son_guncelleme", time);
     Firebase.setString(firebaseData, "/NetTime/tarih", date);
     Firebase.setInt(firebaseData, "/NetTime/timestamp", ts);
+    Firebase.setBool(firebaseData, "/NetTime/isFed", isFed);
+    Firebase.setInt(firebaseData, "/NetTime/lastFedTime", lastFedTime);
+  }
+
+  void readFirebase(bool &isFed, long &lastFedTime) {
+    if (Firebase.getBool(firebaseData, "/NetTime/isFed")) {
+      isFed = firebaseData.boolData();
+    }
+    if (Firebase.getInt(firebaseData, "/NetTime/lastFedTime")) {
+      lastFedTime = firebaseData.intData();
+    }
   }
 
   void broadcastUDP(String message) {
     IPAddress broadcastIP = WiFi.localIP();
     broadcastIP[3] = 255;
-    udp.beginPacket(broadcastIP, OUTGOING_PORT); //Updated
+    udp.beginPacket(broadcastIP, OUTGOING_PORT);  //Updated
     udp.write(message.c_str());
     udp.endPacket();
   }
@@ -113,6 +123,25 @@ public:
     else if (rssi > -85) return 2;   // Fair
     else if (rssi > -100) return 1;  // Weak
     return 0;                        // No signal
+  }
+
+  bool handleFeederNetwork(bool &currentFedState, long &lastFedTime, long currentTimestamp) {
+    int packetSize = udp.parsePacket();
+
+    if (packetSize) {
+      char buf[32];
+      int len = udp.read(buf, 31);
+      buf[len] = 0;
+      String resp = String(buf);
+      resp.trim();
+
+      if (resp == "FEED_SUCCESS") {
+        currentFedState = true;
+        lastFedTime = currentTimestamp;
+        return true;
+      }
+    }
+    return false;
   }
 };
 #endif

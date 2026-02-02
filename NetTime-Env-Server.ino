@@ -25,6 +25,11 @@ Page currentPage = NONE;
 float currentTemp;
 float currentHum;
 
+// Global Variables of Feeder Client
+bool isFed;
+long lastFedTime;
+String lastDayChecked;
+
 void setup() {
   Serial.begin(115200);
   pinMode(TFT_LED, OUTPUT);
@@ -45,11 +50,13 @@ void setup() {
 
   tft.fillScreen(TFT_BLACK);
   displayBox.drawTaskbar(tft);
-  switchPage(WEATHER_PAGE);
+  switchPage(DESKTOP_PAGE);
+  netBox.readFirebase(isFed, lastFedTime);
 }
 
 void loop() {
   netBox.handleOTA();
+  netBox.handleFeederNetwork(isFed, lastFedTime, timeBox.getTimestamp());
 
   // Unified UI and Sensor Update (Every 1 second)
   if (millis() - lastUIUpdate >= 1000) {
@@ -64,23 +71,43 @@ void loop() {
     displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
     displayBox.drawWifiIcon(tft, netBox.getSignalLevel());
 
-    // --- 3. PAGE-SPECIFIC UI ---
+    switch (currentPage) {
+      case HOME_PAGE:
+        displayBox.updateHome(tft, isFed, timeBox.getFormattedTime(), currentTemp);
+        break;
 
-    if (currentPage == WEATHER_PAGE) {
-      displayBox.updateWeather(tft, currentTemp, currentHum);
+      case WEATHER_PAGE:
+        displayBox.updateWeather(tft, currentTemp, currentHum);
+        break;
 
-      if (displayBox.isClockExpanded) {
-        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
-                                     timeBox.getDayName(), WiFi.SSID());
-      }
-    } else if (currentPage == SYSTEM_PAGE) {
-      // You can call a small update function here for live system stats if needed
-      if (!displayBox.isClockExpanded) {
-        displayBox.updateSystemStats(tft, ESP.getFreeHeap());
-      } else {
-        displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
-                                     timeBox.getDayName(), WiFi.SSID());
-      }
+      case SYSTEM_PAGE:
+        if (!displayBox.isClockExpanded) {
+          displayBox.updateSystemStats(tft, ESP.getFreeHeap());
+        }
+        break;
+
+      case FEEDER_PAGE:
+        displayBox.updateFeeder(tft, isFed);
+        break;
+
+      case SETTINGS_PAGE:
+        break;
+
+      default:
+        break;
+    }
+
+    // 3. EXPANDED CLOCK (Overlay)
+    if (displayBox.isClockExpanded) {
+      displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
+                                   timeBox.getDayName(), WiFi.SSID());
+    }
+
+    if (timeBox.getHour() == 13 && timeBox.getMinute() == 0 && !isFed) {
+      netBox.broadcastUDP("FEED_NOW");
+    } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
+      isFed = false;
+      lastDayChecked = timeBox.getDayName();
     }
   }
 
@@ -88,7 +115,7 @@ void loop() {
   if (millis() - lastFirebaseSync >= 20000) {
     lastFirebaseSync = millis();
     netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
-                          timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp());
+                          timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
   }
 
   // --- 5. TOUCH CONTROLS ---
@@ -129,14 +156,6 @@ void handleInput() {
 
     // Inside Start Menu Actions
     if (displayBox.isMenuOpen) {
-
-      //WEATHER PAGE BUTTON (Check coordinates based on your menu layout)
-      if (x > 5 && x < 100 && y > 130 && y < 152) {
-        switchPage(WEATHER_PAGE);
-        delay(250);
-        return;
-      }
-
       // SYSTEM PAGE BUTTON
       if (x > 5 && x < 100 && y > 155 && y < 177) {
         switchPage(SYSTEM_PAGE);
@@ -166,6 +185,34 @@ void handleInput() {
         ESP.restart();
       }
     }
+    if (currentPage == DESKTOP_PAGE) {
+      if (y > 30 && y < 120) {
+
+        // 1. SYSTEM
+        if (x > 10 && x < 75) {
+          switchPage(SYSTEM_PAGE);
+        }
+        // 2. WEATHER
+        else if (x > 85 && x < 155) {
+          switchPage(WEATHER_PAGE);
+        }
+        // 3. FEEDER
+        else if (x > 165 && x < 235) {
+          switchPage(FEEDER_PAGE);
+        }
+        // 4. SETTINGS
+        else if (x > 245 && x < 315) {
+          // SETTING_PAGE is coming soon
+        }
+      }
+    } else if (currentPage == FEEDER_PAGE) {
+      if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
+        netBox.broadcastUDP("FEED_NOW");
+      }
+    }
+    if (x > 130 && x < 190 && y > 205) {
+      switchPage(DESKTOP_PAGE);
+    }
   }
 }
 
@@ -186,6 +233,9 @@ void switchPage(Page targetPage) {
   tft.fillRect(0, 0, 320, 205, TFT_BLACK);
 
   switch (currentPage) {
+    case DESKTOP_PAGE:
+      displayBox.drawDesktopPage(tft);
+      break;
     case WEATHER_PAGE:
       displayBox.drawHeader(tft, WEATHER_TITLE, 0x0063, 0xFFFF);
       displayBox.drawWeatherPage(tft);
@@ -194,6 +244,19 @@ void switchPage(Page targetPage) {
     case SYSTEM_PAGE:
       displayBox.drawHeader(tft, SYSTEM_TITLE, 0x0063, 0xFFFF);
       displayBox.drawSystemPage(tft);
+      break;
+
+    case HOME_PAGE:
+      displayBox.drawHeader(tft, HOME_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHomePage(tft);
+      break;
+
+    case FEEDER_PAGE:
+      displayBox.drawHeader(tft, FEEDER_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawFeederPage(tft);
+      break;
+
+    case SETTINGS_PAGE:
       break;
 
     default:

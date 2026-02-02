@@ -8,7 +8,7 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.2.1-alpha (2026)"
+#define VERSION "NetTime OS v2.3.0-alpha (2026)"
 
 class DisplayManager {
 private:
@@ -50,6 +50,27 @@ public:
     imgFile.close();
   }
 
+  void drawMonoIcon(TFT_eSPI &tft, const char *filename, int x, int y, uint16_t color) {
+    File imgFile = SD.open(filename, FILE_READ);
+    if (!imgFile) return;
+
+    imgFile.seek(62);
+
+    for (int i = 0; i < 32; i++) {  // Y axis
+      uint8_t rowData[4];           // 32 bit = 4 byte
+      imgFile.read(rowData, 4);
+
+      for (int j = 0; j < 4; j++) {          // X axis as byte
+        for (int bit = 0; bit < 8; bit++) {  // X axis as bit
+          if (rowData[j] & (0x80 >> bit)) {
+            tft.drawPixel(x + (j * 8) + bit, y + (31 - i), color);
+          }
+        }
+      }
+    }
+    imgFile.close();
+  }
+
 
   /**
      * @brief Shows the "POROY SOFTWARE" splash screen with a loading animation.
@@ -85,25 +106,20 @@ public:
   bool isClockExpanded = false;
 
   void drawStartMenu(TFT_eSPI &tft) {
-    // 1. Menu Container (Extended height to fit 3 items)
-    // Positioned from Y: 125 to 205
-    tft.fillRect(2, 125, 100, 80, 0x10A2);
-    tft.drawRect(2, 125, 100, 80, 0x319F);
+    // 1. Menu Container (Extended height to fit 2 items)
+    // Positioned from Y: 145 to 205
+    tft.loadFont(ATR12);
+    tft.setTextColor(TFT_WHITE, 0x02D7);
+    tft.fillRect(2, 145, 100, 60, 0x10A2);
+    tft.drawRect(2, 145, 100, 60, 0x319F);
 
     tft.setTextDatum(MC_DATUM);
 
-    // 2. Weather Page Button (Top)
-    // Blue background for consistency
-    tft.fillRect(5, 130, 94, 22, 0x02D7);
-    tft.loadFont(ATR12);
-    tft.setTextColor(TFT_WHITE, 0x02D7);
-    tft.drawString(WEATHER_BTN, 52, 141);  // You can use a constant like WEATHER_BTN
-
-    // 3. System Page Button (Middle)
+    // 2. System Page Button (Middle)
     tft.fillRect(5, 155, 94, 22, 0x02D7);
     tft.drawString(SYSTEM_BTN, 52, 166);
 
-    // 4. Restart Button (Bottom)
+    // 3. Restart Button (Bottom)
     // Red or distinct blue to indicate action
 
     tft.fillRect(5, 180, 94, 22, 0x02D7);
@@ -123,6 +139,90 @@ public:
     tft.setTextDatum(TL_DATUM);
   }
 
+  //-------------- HOME_PAGE -------------------
+
+  void drawHomePage(TFT_eSPI &tft) {
+    tft.loadFont(ATR12);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextDatum(TL_DATUM);
+
+    // Etiketler
+    tft.drawString(String(TXT_TIME) + ":", 10, 35);
+    tft.drawString(String(TXT_TEMP) + ":", 10, 75);
+    tft.drawString(String(TXT_FEEDER) + ":", 10, 115);
+
+    tft.unloadFont();
+  }
+
+  //-------------- HOME_PAGE END ------------------
+
+  //-------------- UPDATE_HOME_PAGE ---------------
+
+  void updateHome(TFT_eSPI &tft, bool isFed, String timeStr, float temp) {
+    tft.loadFont(ATR20);
+    tft.setTextDatum(TL_DATUM);
+
+    // Clock
+    tft.setTextColor(0x04DF, TFT_BLACK);  // Turkuaz
+    tft.setTextPadding(tft.textWidth("88:88"));
+    tft.drawString(timeStr, 110, 35);
+
+    // Temperature
+    tft.setTextColor(0x04DF, TFT_BLACK);
+    tft.setTextPadding(tft.textWidth("88.8 °C"));
+    tft.drawString(String(temp, 1) + " °C", 110, 75);
+
+    // IsFed?
+    uint16_t statusColor = isFed ? TFT_GREEN : 0xFCA0;  // Yeşil veya Turuncu
+    tft.setTextColor(statusColor, TFT_BLACK);
+    tft.setTextPadding(tft.textWidth("Yemleme Bekliyor"));
+
+    String statusText = isFed ? String(TXT_FED) : String(TXT_WAIT);
+    tft.drawString(statusText, 110, 115);
+
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+
+  //------------ UPDATE_HOME_PAGE END -------------
+
+  //----- FEEDER_PAGE -----
+  void drawFeederPage(TFT_eSPI &tft) {
+    tft.loadFont(ATR20);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextDatum(TL_DATUM);
+
+    // Etiketler
+    tft.drawString(String(TXT_FEEDER) + ":", 10, 35);
+    tft.fillRect(100, 100, 120, 40, 0x04DF);
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextColor(TFT_WHITE, 0x04DF);
+    tft.setTextPadding(tft.textWidth(FEEDER_BTN));
+    tft.drawString(FEEDER_BTN, 160, 120);
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+  //----- FEEDER_PAGE END -----
+
+
+  //-------------- UPDATE_FEEDER_PAGE ---------------
+
+  void updateFeeder(TFT_eSPI &tft, bool isFed) {
+    tft.loadFont(ATR20);
+    tft.setTextDatum(TL_DATUM);
+
+    // IsFed?
+    uint16_t statusColor = isFed ? TFT_GREEN : 0xFCA0;  // Yeşil veya Turuncu
+    tft.setTextColor(statusColor, TFT_BLACK);
+    tft.setTextPadding(tft.textWidth("Yemleme Bekliyor"));
+
+    String statusText = isFed ? String(TXT_FED) : String(TXT_WAIT);
+    tft.drawString(statusText, 110, 35);
+
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+
   void hideStartMenu(TFT_eSPI &tft, Page currentPage, float temp, float hum) {
     isMenuOpen = false;
     tft.setViewport(2, 125, 100, 80, false);
@@ -137,6 +237,7 @@ public:
 
     // 2. Resized Start Button (Centered in the new bar)
     drawSDImage(tft, "/start.bmp", 5, 206, 32, 32);
+    drawMonoIcon(tft, "/home.bmp", 144, 206, TFT_WHITE);
   }
 
   void drawHeader(TFT_eSPI &tft, const char *title, uint16_t bgColor, uint16_t txtColor) {
@@ -147,6 +248,8 @@ public:
     tft.drawString(title, 160, 15);
     tft.unloadFont();
   }
+
+  //---------- WEATHER_PAGE ----------
 
   void drawWeatherPage(TFT_eSPI &tft) {
     tft.loadFont(ATR20);
@@ -159,6 +262,8 @@ public:
 
     tft.unloadFont();
   }
+
+  //---------- WEATHER_PAGE END ----------
 
   // --- Dynamic Data Only ---
   void updateWeather(TFT_eSPI &tft, float temp, float hum) {
@@ -227,8 +332,6 @@ public:
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(TFT_WHITE, 0x0112);
 
-    //- - - - - - - - - - -NEW- - - - - - - - - - -
-    
     // Trigger cleanup only when the day actually changes
     if (day != lastDayName) {
       // Eski ve yeni günün piksel genişliklerini al
@@ -245,7 +348,7 @@ public:
       tft.setTextPadding(tft.textWidth(day));
       tft.drawString(day, 227, 155);
     }
-    //- - - - - - - - - - -NEW-END- - - - - - - - - - -
+
     tft.unloadFont();
 
     tft.loadFont(ATR16);
@@ -316,6 +419,42 @@ public:
       tft.fillRect(x_pos, y_bottom - current_bar_h, bar_w, current_bar_h, color);
     }
   }
+
+  //------ DESKTOP PAGE -----
+  void drawDesktopPage(TFT_eSPI &tft) {
+    tft.fillRect(0, 0, 320, 30, TFT_BLACK);
+    tft.loadFont(ATR16);
+    tft.setTextDatum(BC_DATUM);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    // Grid Settings
+    int startX = 36;
+    int startY = 40;
+    int spacingX = 82;
+    //---------------
+
+    // System
+    drawMonoIcon(tft, "/system.bmp", startX - 16, startY, 0x04DF);
+    tft.setTextPadding(tft.textWidth(SYSTEM_BTN));
+    tft.drawString(SYSTEM_BTN, startX, startY + 52);
+
+    // Weather
+    drawMonoIcon(tft, "/weather.bmp", (startX + spacingX) - 16, startY, 0x04DF);
+    tft.setTextPadding(tft.textWidth(WEATHER_BTN));
+    tft.drawString(WEATHER_BTN, (startX + spacingX), startY + 52);
+
+    // Feeder
+    drawMonoIcon(tft, "/feeder.bmp", (startX + 2 * spacingX) - 16, startY, 0x04DF);
+    tft.setTextPadding(tft.textWidth(FEEDER_BTN));
+    tft.drawString(TXT_FEEDER, (startX + 2 * spacingX), startY + 52);
+
+    // Settings
+    drawMonoIcon(tft, "/settings.bmp", (startX + 3 * spacingX) - 16, startY, 0x04DF);
+    tft.setTextPadding(tft.textWidth(SETTINGS_BTN));
+    tft.drawString(SETTINGS_BTN, (startX + 3 * spacingX), startY + 52);
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+  //----- DESKTOP PAGE END -----
 
   /* * * Draws the System Properties page content.
    * Displays static device information.
@@ -397,12 +536,33 @@ public:
 
     tft.fillRect(0, 0, 320, 240, TFT_BLACK);
 
-    if (currentPage == WEATHER_PAGE) {
-      drawWeatherPage(tft);
-      // Immediately fill with current sensor data
-      updateWeather(tft, temp, hum);
-    } else if (currentPage == SYSTEM_PAGE) {
-      drawSystemPage(tft);
+    switch (currentPage) {
+      case WEATHER_PAGE:
+        drawWeatherPage(tft);
+        updateWeather(tft, temp, hum);
+        break;
+
+      case SYSTEM_PAGE:
+        drawSystemPage(tft);
+        break;
+
+      case FEEDER_PAGE:
+        drawFeederPage(tft);
+        break;
+
+      case HOME_PAGE:
+        drawHomePage(tft);
+        break;
+
+      case SETTINGS_PAGE:
+        break;
+
+      case DESKTOP_PAGE:
+        drawDesktopPage(tft);
+        break;
+
+      default:
+        break;
     }
   }
 };
