@@ -71,7 +71,6 @@ dataRef.on('value', (snapshot) => {
 
         document.getElementById('data-isfed').innerText = isFedText;
         document.getElementById('data-fedtp').innerText = d.lastFedTime ?? "----";
-        document.getElementById('data-lastfed').innerText = d.lastFedTime ?? "----";
         
         const newTimestamp = d.timestamp;
 
