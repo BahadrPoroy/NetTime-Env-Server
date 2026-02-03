@@ -70,18 +70,36 @@ dataRef.on('value', (snapshot) => {
             : (currentLang === 'tr' ? "Yemleme Bekleniyor" : "Waiting for Feed");
 
         document.getElementById('data-isfed').innerText = isFedText;
+        // --- SMART TIMESTAMP FORMATTING ---
         if (d.lastFedTime && d.lastFedTime !== "----") {
             const fedDate = new Date(d.lastFedTime * 1000);
-            // HH:MM format
-            const formattedTime = fedDate.toLocaleTimeString('tr-TR', {
+            const now = new Date();
+
+            // Is lastFedTime today?
+            const isToday = fedDate.toDateString() === now.toDateString();
+
+            const timePart = fedDate.toLocaleTimeString('tr-TR', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false
             });
-            document.getElementById('data-fedtp').innerText = formattedTime;
+
+            if (isToday) {
+                // If today, show only time: "13:00"
+                document.getElementById('data-fedtp').innerText = timePart;
+            } else {
+                // Else show date and time: "25/12 13:00"
+                const datePart = fedDate.toLocaleDateString('tr-TR', {
+                    day: '2-digit',
+                    month: '2-digit'
+                }).replace(/\./g, '/');
+
+                document.getElementById('data-fedtp').innerText = `${datePart} ${timePart}`;
+            }
         } else {
             document.getElementById('data-fedtp').innerText = "----";
         }
+        // ---------------------------------
         const newTimestamp = d.timestamp;
 
         driftCorrection = Date.now() - (newTimestamp * 1000);
