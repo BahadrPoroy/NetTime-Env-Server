@@ -356,6 +356,7 @@ public:
     tft.setTextColor(TFT_WHITE, 0x0112);
     tft.setTextPadding(160);
     tft.drawString(ssid, 227, 185);
+    tft.setTextPadding(0);
     tft.unloadFont();
     isClockExpanded = true;
   }
