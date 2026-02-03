@@ -335,11 +335,11 @@ public:
     // Trigger cleanup only when the day actually changes
     if (day != lastDayName) {
       // Eski ve yeni günün piksel genişliklerini al
-      int oldW = tft.textWidth(lastDayName);
-      int newW = tft.textWidth(day);
+      int oldW = tft.textWidth(lastDayName) + 10;  // 10px safety space
+      int clearH = tft.fontHeight();               // Height of loaded font
+      tft.fillRect(227 - (oldW / 2), 155 - (clearH / 2), oldW, clearH, 0x0112);
 
-      // Use the wider of the two to ensure full clearance of previous text
-      tft.setTextPadding(max(oldW, newW));
+      tft.setTextPadding(tft.textWidth(day));
       tft.drawString(day, 227, 155);
 
       lastDayName = day;  // Update tracker
