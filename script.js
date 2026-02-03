@@ -70,8 +70,18 @@ dataRef.on('value', (snapshot) => {
             : (currentLang === 'tr' ? "Yemleme Bekleniyor" : "Waiting for Feed");
 
         document.getElementById('data-isfed').innerText = isFedText;
-        document.getElementById('data-fedtp').innerText = d.lastFedTime ?? "----";
-        
+        if (d.lastFedTime && d.lastFedTime !== "----") {
+            const fedDate = new Date(d.lastFedTime * 1000);
+            // HH:MM format
+            const formattedTime = fedDate.toLocaleTimeString('tr-TR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            document.getElementById('data-fedtp').innerText = formattedTime;
+        } else {
+            document.getElementById('data-fedtp').innerText = "----";
+        }
         const newTimestamp = d.timestamp;
 
         driftCorrection = Date.now() - (newTimestamp * 1000);
