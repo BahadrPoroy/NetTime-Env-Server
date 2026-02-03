@@ -1,11 +1,11 @@
-# 🕒 NetTime-Env-Server V2.3.0-alpha 🌐
+# 🕒 NetTime-Env-Server V2.4.0-alpha 🌐
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
 ![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ### "The NetTime OS - Premium TFT Edition"
 
-## ⚠️ Note: Version 2.3.0 is currently in Alpha. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
+## ⚠️ Note: Version 2.4.0 is currently in Alpha. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
 
 ## 📸 Media
 
@@ -21,11 +21,9 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.3.0-alpha
+## 🚀 What's New in v2.4.0-alpha
 
-- **Enhanced UDP Port Configuration:** Switched to separate ports for RX and TX. This separation minimizes potential collisions and improves connection stability.
-
-- **Evolution of UI/UX Framework:** Transitioned from a legacy list-based navigation to a modern, icon-driven Desktop interface. This update introduces a dedicated desktop home screen and an intuitive navigation engine for enhanced user accessibility.
+- **Smart Timestamp Formatting (Web): Enhanced the lastFed display logic. The dashboard now dynamically toggles between showing only the time ($HH:mm$) for today's entries and a full date-time format ($DD/MM \ HH:mm$) for older records to prevent ambiguity
 
 - **Persistent Feeding Logs & Universal State Template:** Automated synchronization of device states with Firebase, providing cross-device persistence and a scalable architecture for future IoT applications.
 
@@ -48,6 +46,17 @@ The project has been refactored from a single-file script into a modular, header
 - **Sensor:** DHT11 / DHT22 (Temp & Humidity)
 - **Display:** 2.8" ILI9341 TFT display (SPI)
 - **Storage:** MicroSD Card (for assets and fonts)
+
+🌐 The NetTime Ecosystem
+This client is designed to work within the NetTime IoT Framework. While it can operate as a standalone node, it reaches its full potential when paired with other ecosystem components:
+
+NetTime-Env-Server(This Repo): The central hub that provides localized time, environmental data, and acts as the primary network master.
+
+[NetTime-Client-Display](https://github.com/BahadrPoroy/NetTime-Client-Display): A dedicated monitoring node that visualizes real-time climate data and synchronized time on a peripheral OLED/TFT display.
+
+[NetTime-Feeder-Client](https://github.com/BahadrPoroy/Feeder-Client): The ecosystem's actuator node, responsible for cloud-triggered hardware automation and persistent state logging.
+
+[Web Dashboard](https://bahadrporoy.github.io/NetTime-Env-Server/): A real-time interface (integrated within the Server) that allows manual overrides and global monitoring of all connected clients.
 
 ## 📡 Technology Stack
 - **Firmware:** Arduino IDE (C++), ArduinoJson, NTPClient.

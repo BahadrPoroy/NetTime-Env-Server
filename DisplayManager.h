@@ -8,7 +8,7 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.3.0-alpha (2026)"
+#define VERSION "NetTime OS v2.4.0-alpha (2026)"
 
 class DisplayManager {
 private:
