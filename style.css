@@ -89,16 +89,21 @@ p {
     color: var(--status-ok);
 }
 
-.row > div {
+.row {
     display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-    padding: 0 10px; /* Horizontal spacing for better readability */
+    justify-content: center; /* Centers the two blocks (Temp/Hum or Status/Time) */
+    gap: 30px; /* Adds a clean 30px gap between the two blocks */
+    margin-top: 15px;
 }
+
+    .row > div {
+        flex: 1; /* Allows blocks to share space equally */
+        text-align: center;
+    }
 
 /* Responsive adjustment: Reduces spacing on smaller mobile devices */
 @media (max-width: 480px) {
     .row > div {
-        padding: 0 5px;
+        gap: 0 15px;
     }
 }
