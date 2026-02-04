@@ -89,8 +89,16 @@ p {
     color: var(--status-ok);
 }
 
-.row {
+.row > div {
     display: flex;
     justify-content: space-around;
     margin-top: 20px;
+    padding: 0 10px; /* Horizontal spacing for better readability */
+}
+
+/* Responsive adjustment: Reduces spacing on smaller mobile devices */
+@media (max-width: 480px) {
+    .row > div {
+        padding: 0 5px;
+    }
 }
