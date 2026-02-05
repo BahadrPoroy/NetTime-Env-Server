@@ -237,15 +237,30 @@ public:
 
     // 2. Resized Start Button (Centered in the new bar)
     drawSDImage(tft, "/start.bmp", 5, 206, 32, 32);
-    drawMonoIcon(tft, "/home.bmp", 144, 206, TFT_WHITE);
   }
 
   void drawHeader(TFT_eSPI &tft, const char *title, uint16_t bgColor, uint16_t txtColor) {
     tft.fillRect(0, 0, 320, 30, bgColor);
+    // Close Button (X) Configuration
+    int btnSize = 30;          // Button height matches header height
+    int btnX = 320 - btnSize;  // Flush to the right edge
+    int btnY = 0;
+    // Draw the red background for the close button
+    tft.fillRect(btnX, btnY, btnSize, btnSize, TFT_RED);
+    // Draw the "X" symbol using diagonal lines
+    int padding = 9;  // Padding inside the button for the X icon
+    uint16_t xColor = TFT_WHITE;
+    // Line 1: Top-Left to Bottom-Right
+    tft.drawLine(btnX + padding, btnY + padding, btnX + btnSize - padding, btnY + btnSize - padding, xColor);
+    // Line 2: Top-Right to Bottom-Left
+    tft.drawLine(btnX + btnSize - padding, btnY + padding, btnX + padding, btnY + btnSize - padding, xColor);
+    
     tft.loadFont(ATR24);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(txtColor, bgColor);
-    tft.drawString(title, 160, 15);
+    // Optical Center: Calculate the middle point between the left edge and the button start
+    int opticalCenter = btnX / 2;
+    tft.drawString(title, opticalCenter, 15);
     tft.unloadFont();
   }
 

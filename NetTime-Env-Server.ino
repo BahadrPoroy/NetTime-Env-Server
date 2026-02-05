@@ -105,7 +105,7 @@ void loop() {
 
     if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15 && !isFed) {
       netBox.broadcastUDP("FEED_NOW");
-    } else if (time.getHour() > 15 && !isFed) {
+    } else if (timeBox.getHour() > 15 && !isFed) {
       //displayBox.feedingError();
     } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
       isFed = false;
@@ -189,10 +189,10 @@ void handleInput() {
       netBox.broadcastUDP("FEED_NOW");
     }
   }
-
-  // --- Global Taskbar Home Button ---
-  if (x > 130 && x < 190 && y > 205) {
-    switchPage(DESKTOP_PAGE);
+  if (currentPage != DESKTOP_PAGE) {
+    if (x > 290 && y < 30){
+      switchPage(DESKTOP_PAGE);
+    }
   }
   delay(250);
 }
