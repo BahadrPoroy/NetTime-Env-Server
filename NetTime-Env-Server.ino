@@ -103,8 +103,10 @@ void loop() {
                                    timeBox.getDayName(), WiFi.SSID());
     }
 
-    if (timeBox.getHour() == 13 && timeBox.getMinute() == 0 && !isFed) {
+    if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15 && !isFed) {
       netBox.broadcastUDP("FEED_NOW");
+    } else if (time.getHour() > 15 && !isFed) {
+      //displayBox.feedingError();
     } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
       isFed = false;
       lastDayChecked = timeBox.getDayName();
