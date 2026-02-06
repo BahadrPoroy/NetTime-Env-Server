@@ -10,6 +10,12 @@
 
 #define VERSION "NetTime OS v2.4.0-alpha (2026)"
 
+// Definition of icon height & width values
+#define ICON_W 32
+#define ICON_H 32
+#define TRAY_ICON_H 16
+#define TRAY_ICON_W 16
+
 class DisplayManager {
 private:
   unsigned long lastAnimMillis = 0;
@@ -50,21 +56,28 @@ public:
     imgFile.close();
   }
 
-  void drawMonoIcon(TFT_eSPI &tft, const char *filename, int x, int y, uint16_t color) {
+  void drawMonoIcon(TFT_eSPI &tft, const char *filename, int x, int y, int w, int h, uint16_t color) {  //Scalebility added
     File imgFile = SD.open(filename, FILE_READ);
     if (!imgFile) return;
 
     imgFile.seek(62);
 
-    for (int i = 0; i < 32; i++) {  // Y axis
-      uint8_t rowData[4];           // 32 bit = 4 byte
-      imgFile.read(rowData, 4);
+    // Calculate bytes per row: BMP rows are padded to 4-byte boundaries
+    int bytesPerRow = (w + 31) / 32 * 4;
 
-      for (int j = 0; j < 4; j++) {          // X axis as byte
-        for (int bit = 0; bit < 8; bit++) {  // X axis as bit
-          if (rowData[j] & (0x80 >> bit)) {
-            tft.drawPixel(x + (j * 8) + bit, y + (31 - i), color);
-          }
+    for (int i = 0; i < h; i++) {  // Y axis
+      uint8_t rowData[bytesPerRow];
+      imgFile.read(rowData, bytesPerRow);
+
+      for (int j = 0; j < w; j++) {  // X axis as byte
+                                     // Calculate which byte and which bit we are looking at
+        int byteIdx = j / 8;
+        int bitIdx = j % 8;
+
+        // Check if the specific bit is active (1)
+        if (rowData[byteIdx] & (0x80 >> bitIdx)) {
+          // BMP stores rows bottom-to-top, so we use (h - 1 - i)
+          tft.drawPixel(x + j, y + (h - 1 - i), color);
         }
       }
     }
@@ -254,7 +267,7 @@ public:
     tft.drawLine(btnX + padding, btnY + padding, btnX + btnSize - padding, btnY + btnSize - padding, xColor);
     // Line 2: Top-Right to Bottom-Left
     tft.drawLine(btnX + btnSize - padding, btnY + padding, btnX + padding, btnY + btnSize - padding, xColor);
-    
+
     tft.loadFont(ATR24);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(txtColor, bgColor);
@@ -449,22 +462,22 @@ public:
     //---------------
 
     // System
-    drawMonoIcon(tft, "/system.bmp", startX - 16, startY, 0x04DF);
+    drawMonoIcon(tft, "/system.bmp", startX - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(SYSTEM_BTN));
     tft.drawString(SYSTEM_BTN, startX, startY + 52);
 
     // Weather
-    drawMonoIcon(tft, "/weather.bmp", (startX + spacingX) - 16, startY, 0x04DF);
+    drawMonoIcon(tft, "/weather.bmp", (startX + spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(WEATHER_BTN));
     tft.drawString(WEATHER_BTN, (startX + spacingX), startY + 52);
 
     // Feeder
-    drawMonoIcon(tft, "/feeder.bmp", (startX + 2 * spacingX) - 16, startY, 0x04DF);
+    drawMonoIcon(tft, "/feeder.bmp", (startX + 2 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(FEEDER_BTN));
     tft.drawString(TXT_FEEDER, (startX + 2 * spacingX), startY + 52);
 
     // Settings
-    drawMonoIcon(tft, "/settings.bmp", (startX + 3 * spacingX) - 16, startY, 0x04DF);
+    drawMonoIcon(tft, "/settings.bmp", (startX + 3 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(SETTINGS_BTN));
     tft.drawString(SETTINGS_BTN, (startX + 3 * spacingX), startY + 52);
     tft.unloadFont();
@@ -579,6 +592,11 @@ public:
       default:
         break;
     }
+  }
+
+  void drawFeederError(){
+
+    
   }
 };
 #endif
