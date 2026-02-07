@@ -29,6 +29,8 @@ float currentHum;
 bool isFed;
 long lastFedTime;
 String lastDayChecked;
+bool isFeederAlarmActive = true;
+uint16_t feederAlarmColor;
 
 void setup() {
   Serial.begin(115200);
@@ -52,6 +54,7 @@ void setup() {
   displayBox.drawTaskbar(tft);
   switchPage(DESKTOP_PAGE);
   netBox.readFirebase(isFed, lastFedTime);
+  feederAlarmColor = isFed ? TFT_YELLOW : TFT_RED;
 }
 
 void loop() {
@@ -103,11 +106,22 @@ void loop() {
                                    timeBox.getDayName(), WiFi.SSID());
     }
 
-    if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15 && !isFed) {
-      netBox.broadcastUDP("FEED_NOW");
+    if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15) {
+      if (!isFed) {
+        netBox.broadcastUDP("FEED_NOW");
+        isFeederAlarmActive = true;
+        feederAlarmColor = TFT_YELLOW;
+      }else{
+        isFeederAlarmActive = true;
+        feederAlarmColor = TFT_GREEN;
+      }
+
     } else if (timeBox.getHour() > 15 && !isFed) {
-      //displayBox.feedingError();
+      isFeederAlarmActive = true;
+      feederAlarmColor = TFT_RED;
     } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
+      isFeederAlarmActive = true;
+      feederAlarmColor = TFT_YELLOW;
       isFed = false;
       lastDayChecked = timeBox.getDayName();
     }
@@ -122,6 +136,7 @@ void loop() {
 
   // --- 5. TOUCH CONTROLS ---
   handleInput();
+  displayBox.drawSystemTray(tft, isFeederAlarmActive, feederAlarmColor);
 }
 
 void handleInput() {
@@ -190,7 +205,7 @@ void handleInput() {
     }
   }
   if (currentPage != DESKTOP_PAGE) {
-    if (x > 290 && y < 30){
+    if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
     }
   }

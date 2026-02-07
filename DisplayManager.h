@@ -16,6 +16,18 @@
 #define TRAY_ICON_H 16
 #define TRAY_ICON_W 16
 
+// --- System Tray Configuration ---
+#define MAX_TRAY_ICONS 3  // Maximum number of visible icons before grouping
+#define TRAY_ICON_W 16    // Width of each tray icon
+#define TRAY_ICON_H 16    // Height of each tray icon
+#define TRAY_SPACING 4    // Gap between icons
+#define TRAY_Y_START 217  // Y position in the 210-240 Taskbar area
+
+// ---- Feeder Alert variables ---
+uint16_t lastFishColor = 0;  // To track state changes
+bool lastFishState = false;
+
+
 class DisplayManager {
 private:
   unsigned long lastAnimMillis = 0;
@@ -594,9 +606,56 @@ public:
     }
   }
 
-  void drawFeederError(){
+  //----- SYSTEM TRAY -----
+  /**
+   * @brief Draws icons in the system tray area, shifting left from the WiFi icon.
+   * @param feederAlarm Current state of the feeder alert.
+   * @param feederColor Color for the feeder icon (White/Red).
+   */
+  void drawSystemTray(TFT_eSPI &tft, bool feederAlarm, uint16_t feederAlarmColor) {
+    static bool lastAlarmState = false;
+    static uint16_t lastColor = 0;
+    static int lastIconCount = -1;
 
-    
+    if (feederAlarm == lastAlarmState && feederAlarmColor == lastColor) {
+      return;
+    }
+
+    lastAlarmState = feederAlarm;
+    lastColor = feederAlarmColor;
+    // Starting X (Just left of WiFi at 225)
+    int cursorX = 220;
+    int activeIconCounter = 0;
+    if (feederAlarm) activeIconCounter++;
+
+    if (activeIconCounter == 0) tft.fillRect(160, TRAY_Y_START, 65, 16, 0x0112);  // Cleans the area
+
+    if (activeIconCounter <= MAX_TRAY_ICONS) {
+      // SCENARIO 1: Everything fits
+      if (feederAlarm) {
+        cursorX -= TRAY_ICON_W;
+        drawMonoIcon(tft, "/feeder_tray.bmp", cursorX, TRAY_Y_START, TRAY_ICON_W, TRAY_ICON_H, feederAlarmColor);
+        cursorX -= TRAY_SPACING;
+      }
+    } else {
+      // SCENARIO 2: Overflow (Windows Style)
+      // Draw +X Indicator
+      int hiddenCount = activeIconCounter - (MAX_TRAY_ICONS);
+      tft.loadFont(ATR12);
+      tft.setTextDatum(MR_DATUM);
+      tft.setTextColor(TFT_WHITE, 0x0112);  // Taskbar blue
+      tft.drawString("+" + String(hiddenCount), cursorX, TRAY_Y_START + 4);
+      tft.unloadFont();
+
+      cursorX -= 22;  // Space for "+2" etc.
+      // Draw the remaining (MAX_TRAY_ICONS - 1) icons
+      if (feederAlarm) {
+        cursorX -= TRAY_ICON_W;
+        drawMonoIcon(tft, "/feeder_tray.bmp", cursorX, TRAY_Y_START, TRAY_ICON_W, TRAY_ICON_H, feederAlarmColor);
+        cursorX -= TRAY_SPACING;
+      }
+    }
   }
+  //----- SYSTEM TRAY END -----
 };
 #endif
