@@ -8,7 +8,7 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.4.0-alpha (2026)"
+#define VERSION "NetTime OS v2.5.0-beta (2026)"
 
 // Definition of icon height & width values
 #define ICON_W 32

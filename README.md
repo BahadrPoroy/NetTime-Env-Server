@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ### "The NetTime OS - Premium TFT Edition"
 
-## ⚠️ Note: Version 2.4.0 is currently in Alpha. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
+## ⚠️ Note: Version 2.5.0 is currently in Beta. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
 
 ## 📸 Media
 
@@ -21,11 +21,18 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.4.0-alpha
+## 🚀 What's New in v2.5.0-Beta
 
-- **Smart Timestamp Formatting (Web): Enhanced the lastFed display logic. The dashboard now dynamically toggles between showing only the time ($HH:mm$) for today's entries and a full date-time format ($DD/MM \ HH:mm$) for older records to prevent ambiguity
+- **Power Loss Recovery System**: On setup, system reads the isFed and lastFedTime for recovering the last data.
+  - **Enhanced Feeding Window**: Feeding time has been updated to a time range from a specific time. It provides a wide feeding time for data recovery.
+  - **IsFed State Icon**: a 16x16 system tray icon added to ***/Assets*** for showing to feeding status. Depending to isFed value and time the icon's color is changing. *Green means fish are fed. Yellow means waiting for feeding time and red means feeding is unsuccesful*  
 
-- **Persistent Feeding Logs & Universal State Template:** Automated synchronization of device states with Firebase, providing cross-device persistence and a scalable architecture for future IoT applications.
+- **System Tray Space**: A system tray area is allocated for system and alert icons to left of Wi-Fi signal icon.
+  - **Enhanced Returning to Desktop Navigation UI**: 
+    - **1 -** The home button, which is on the task bar is removed for getting the space free for system tray.
+    - **2 -** Title bar reworked: Instead of the home button, a cross button added on the right of *title bar* that's, in a red box. It provides returning to desktop page
+    - ***3 -*** *Feeding status icon has been added to this area*
+  
 
 ## 🚧 Under Construction: The Home and Settings icons represent upcoming features. Navigation to these pages is currently restricted as we finalize the backend integration for these specific modules. ##
 
@@ -69,4 +76,4 @@ NetTime-Env-Server(This Repo): The central hub that provides localized time, env
 - **2:** Create a `secrets.h` file with your WiFi, Firebase, and OTA credentials.
 - **3:** Use the **Arduino IDE** or **PlatformIO** with the `TFT_eSPI` library installed.
 - **4:** Set your display driver to **ILI9341** in the library's user setup.
-- **5:** Upload the `assets/` folder to your SD card (Ensure the file names match the definitions in DisplayManager.h).
+- **5:** Upload the `Assets/` folder to your SD card (Ensure the file names match the definitions in DisplayManager.h).
