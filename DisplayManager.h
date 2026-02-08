@@ -1,6 +1,7 @@
 #ifndef DISPLAY_MANAGER_H
 #define DISPLAY_MANAGER_H
 
+#include "structs.h"
 #include <TFT_eSPI.h>
 #include <SD.h>
 #include <LittleFS.h>
@@ -27,6 +28,10 @@
 uint16_t lastFishColor = 0;  // To track state changes
 bool lastFishState = false;
 
+// --- RAM Bar Color Zones & RAM Values---
+const uint32_t maxUsableHeap = 43008;  //42 KB Max Usable Ram Capacity
+const uint32_t RAM_DANGER = 12000;     // 12 KB below is critical (red)
+const uint32_t RAM_WARNING = 22000;    // 22 KB below is dangerous (yellow)
 
 class DisplayManager {
 private:
@@ -41,6 +46,8 @@ public:
      * @param x X coordinate for the top-left corner.
      * @param y Y coordinate for the top-left corner.
      */
+  String lastIcon = "";
+
   void init(TFT_eSPI &tft) {
     tft.init();
     tft.setRotation(3);
@@ -91,6 +98,36 @@ public:
           // BMP stores rows bottom-to-top, so we use (h - 1 - i)
           tft.drawPixel(x + j, y + (h - 1 - i), color);
         }
+      }
+    }
+    imgFile.close();
+  }
+
+  void drawWeatherIcon(TFT_eSPI &tft, String iconName, int x, int y, int w, int h) {
+    // File Path Creation (Depends on folder struct "/Weather_icons/" changable)
+    String fileName = "/Weather_Icons/" + iconName + ".bmp";
+
+    File imgFile = SD.open(fileName, FILE_READ);
+    if (!imgFile) {
+      Serial.print("Icon error: ");
+      Serial.println(fileName);
+      return;
+    }
+    imgFile.seek(54);
+
+    int bytesPerRow = ((w * 16 + 31) / 32) * 4;
+
+    for (int i = 0; i < h; i++) {
+
+      uint8_t rowData[bytesPerRow];
+      imgFile.read(rowData, bytesPerRow);
+
+      for (int j = 0; j < w; j++) {
+        uint16_t b = rowData[j * 2];
+        uint16_t a = rowData[j * 2 + 1];
+        uint16_t color = (a << 8) | b;
+        if (color == 0xFFFF) color = 0x0000;
+        tft.drawPixel(x + j, y + (h - 1 - i), color);
       }
     }
     imgFile.close();
@@ -292,34 +329,78 @@ public:
   //---------- WEATHER_PAGE ----------
 
   void drawWeatherPage(TFT_eSPI &tft) {
-    tft.loadFont(ATR20);
+    //Indoor Section Title
+    tft.loadFont(ATR16);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);  // White for labels
-    tft.setTextDatum(TL_DATUM);
-
-    // Draw the static labels once
-    tft.drawString(String(TXT_TEMP) + ":", 10, 35);
-    tft.drawString(String(TXT_HUM) + ":", 200, 35);
-
+    tft.setTextDatum(MC_DATUM);
+    tft.drawString(TXT_INDOOR, 160, 50);  // Label from language.h
     tft.unloadFont();
+
+    //Indoor Section labels
+    tft.loadFont(ATR20);
+    tft.setTextDatum(TL_DATUM);
+    // Draw the static labels once
+    tft.drawString(String(TXT_TEMP) + ":", 10, 65);
+    tft.drawString(String(TXT_HUM) + ":", 200, 65);
+    tft.unloadFont();
+
+    // Visual divider using the taskbar border color
+    tft.drawFastHLine(0, 90, 320, 0x319F);
+
+    // Outdoor Section Title
+    tft.loadFont(ATR16);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);  // White for labels
+    tft.setTextDatum(MC_DATUM);
+    tft.drawString(TXT_OUTDOOR, 160, 120);  // Label from language.h
+    tft.unloadFont();
+
+    // Outdoor Section labels
+    tft.loadFont(ATR20);
+    tft.setTextDatum(TL_DATUM);
+    // Draw the static labels once
+    tft.drawString(String(TXT_TEMP) + ":", 130, 140);
+    tft.drawString(String(TXT_HUM) + ":", 130, 170);
+    tft.unloadFont();
+    tft.setTextPadding(0);
   }
 
   //---------- WEATHER_PAGE END ----------
 
   // --- Dynamic Data Only ---
-  void updateWeather(TFT_eSPI &tft, float temp, float hum) {
+  void updateWeather(TFT_eSPI &tft, Page currentPage, float roomTemp, float roomHum, const WeatherData &weather) {
+
+    // 1. Update Indoor Data (DHT11)
     tft.loadFont(ATR20);
     tft.setTextColor(0x04DF, TFT_BLACK);  // Cyan for values
     tft.setTextDatum(TL_DATUM);
 
     // Update Temperature Value
-    // We start drawing after the label "Temp: " (roughly at X: 80-90 depending on font)
     tft.setTextPadding(tft.textWidth("88.8 °C"));
-    tft.drawString(String(temp, 1) + " °C", 90, 35);
+    tft.drawString(String(roomTemp, 1) + " °C", 90, 65);
 
     // Update Humidity Value
     tft.setTextPadding(tft.textWidth("%100"));
-    tft.drawString("%" + String(hum, 0), 260, 35);
+    tft.drawString("%" + String(roomHum, 0), 260, 65);
 
+    // 2. Update Outdoor Data (OpenWeather)
+    if (weather.updated) {
+      // Weather Icon
+      if (currentPage == WEATHER_PAGE && weather.icon != lastIcon) {
+        // Önce eski ikonun yerini siyahla temizle
+        tft.fillRect(19, 129, 66, 66, TFT_BLACK);
+        // Yeni ikonu çiz
+        drawWeatherIcon(tft, weather.icon, 20, 130, 64, 64);
+        lastIcon = weather.icon;  // Gereksiz tekrar çizimi engelle
+        tft.fillRect(18, 192, 5, 5, TFT_BLACK);
+      }
+      // 2. Outdoor values
+      tft.setTextDatum(TL_DATUM);
+      tft.setTextPadding(tft.textWidth("88.8 °C"));
+      tft.drawString(String(weather.temp, 1) + " °C", 210, 140);
+
+      tft.setTextPadding(tft.textWidth("%100"));
+      tft.drawString("%" + String(weather.humidity), 210, 170);
+    }
     tft.unloadFont();
     tft.setTextPadding(0);
   }
@@ -559,12 +640,21 @@ public:
     tft.setTextPadding(tft.textWidth("88.8 KB"));
     tft.drawString(String(freeHeap / 1024.0, 1) + " KB", 105, statsY);
 
+    int usedHeap = maxUsableHeap - freeHeap;
+    if (usedHeap < 0) usedHeap = 0;
+
     // Update RAM Bar Fill (Mapped to 100px frame)
     int barMax = 96;
-    int fillWidth = map(freeHeap, 0, 81920, 0, barMax);
-    if (fillWidth > barMax) fillWidth = barMax;
+    int fillWidth = map(usedHeap, 0, maxUsableHeap, 0, barMax);
 
-    uint16_t barColor = (freeHeap < 15000) ? TFT_RED : TFT_GREEN;
+    if (fillWidth > barMax) fillWidth = barMax;
+    if (fillWidth < 0) fillWidth = 0;
+
+    uint16_t barColor;
+    if (freeHeap < RAM_DANGER) barColor = TFT_RED;
+    else if (freeHeap < RAM_WARNING) barColor = TFT_YELLOW;
+    else barColor = TFT_GREEN;
+
     // Clear previous bar and draw new one
     tft.fillRect(182, statsY - 4, barMax, 8, TFT_BLACK);
     tft.fillRect(182, statsY - 4, fillWidth, 8, barColor);
@@ -579,6 +669,7 @@ public:
 
     switch (currentPage) {
       case WEATHER_PAGE:
+        lastIcon = "";
         drawWeatherPage(tft);
         break;
 

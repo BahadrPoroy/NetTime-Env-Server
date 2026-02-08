@@ -1,10 +1,14 @@
 #ifndef NETWORK_MANAGER_H
 #define NETWORK_MANAGER_H
 
+#include "structs.h"
 #include <ESP8266WiFi.h>
 #include <FirebaseESP8266.h>
 #include <ArduinoOTA.h>
 #include <WiFiUdp.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
 #include "secrets.h"
 
 class NetworkManager {
@@ -14,11 +18,58 @@ private:
   FirebaseAuth auth;
   WiFiUDP udp;
 
+  unsigned long lastWeatherCheck = 0;
+  const unsigned long weatherInterval = 300000;  // 5 minutes (miliseconds)
+
   //Seperated ports for diffrent purposes
   const int OUTGOING_PORT = 4210;  //Sending port for Master
   const int INCOMING_PORT = 4211;  //Listening port for Master
+                                   /**
+   * @brief Fetches weather data from OpenWeather API using stream parsing to save RAM
+   */
+  void getWeatherData() {
+    if (WiFi.status() != WL_CONNECTED) return;
+
+    WiFiClient client;
+
+    HTTPClient http;
+
+    // Construct the URL using credentials from secrets.h
+    String url = "http://api.openweathermap.org/data/3.0/onecall?lat=" + String(YOUR_LATITUDE) + "&lon=" + String(YOUR_LONGITUDE) + "&exclude=minutely,hourly,daily,alerts&units=metric&appid=" + String(YOUR_OPENWEATHER_API_KEY);
+
+    if (http.begin(client, url)) {
+      int httpCode = http.GET();
+
+      if (httpCode == HTTP_CODE_OK) {
+        // Define a filter to extract only the necessary fields from the large JSON response
+        JsonDocument filter;
+        filter["current"]["temp"] = true;
+        filter["current"]["humidity"] = true;
+        filter["current"]["weather"][0]["icon"] = true;
+        filter["current"]["weather"][0]["description"] = true;
+
+        // Use a DynamicJsonDocument to store the filtered result
+        JsonDocument doc;
+        // Parse the stream directly to avoid loading the entire string into memory
+        DeserializationError error = deserializeJson(doc, http.getStream(), DeserializationOption::Filter(filter));
+
+        if (!error) {
+          currentWeather.temp = doc["current"]["temp"];
+          currentWeather.humidity = doc["current"]["humidity"];
+          currentWeather.icon = doc["current"]["weather"][0]["icon"].as<String>();
+          currentWeather.description = doc["current"]["weather"][0]["description"].as<String>();
+          currentWeather.updated = true;
+        }
+      } else {
+        Serial.printf("[Weather] HTTP Error: %s\n", http.errorToString(httpCode).c_str());
+      }
+      http.end();
+    }
+  }
 
 public:
+  WeatherData currentWeather;
+
   void begin(TFT_eSPI &tft, DisplayManager &display) {
     WiFi.mode(WIFI_STA);
     WiFi.begin(YOUR_SSID, YOUR_PASS);
@@ -125,7 +176,7 @@ public:
     return 0;                        // No signal
   }
 
-  bool handleFeederNetwork(bool &currentFedState, long &lastFedTime, long currentTimestamp) {
+  void handleFeederNetwork(bool &currentFedState, long &lastFedTime, long currentTimestamp) {
     int packetSize = udp.parsePacket();
 
     if (packetSize) {
@@ -138,10 +189,21 @@ public:
       if (resp == "FEED_SUCCESS") {
         currentFedState = true;
         lastFedTime = currentTimestamp;
-        return true;
+      } else if (resp == "FEED_ERROR") {
+        currentFedState = false;
       }
     }
-    return false;
+  }
+
+  /**
+   * @brief Handles periodic weather updates based on the defined interval
+   */
+  void handleOpenWeather() {
+    // Initial call or periodic check
+    if (millis() - lastWeatherCheck >= weatherInterval || lastWeatherCheck == 0) {
+      lastWeatherCheck = millis();
+      getWeatherData();
+    }
   }
 };
 #endif

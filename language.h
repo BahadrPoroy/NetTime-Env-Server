@@ -35,6 +35,9 @@
 #define TXT_FEEDER "Yemleyici"
 #define FEEDER_BTN TXT_FEEDER
 #define FEEDER_TITLE "YEMLEME SİSTEMİ"
+#define TXT_INDOOR "ODA HAVASI"
+#define TXT_OUTDOOR "DIŞ HAVA DURUMU"
+#define TXT_UPDATING "Güncelleniyor..."
 const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi" };
 #else
 // --- English ---
@@ -67,6 +70,9 @@ const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe",
 #define TXT_FEEDER "Feeder"
 #define FEEDER_BTN TXT_FEEDER
 #define FEEDER_TITLE "FEEDER SYSTEM"
+#define TXT_INDOOR "INDOOR"
+#define TXT_OUTDOOR "OUTDOOR"
+#define TXT_UPDATING "Updating..."
 const char* days[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 #endif
 

@@ -2,6 +2,7 @@
 #include <dht11.h>
 #include <SD.h>
 #include "config.h"
+#include "structs.h"
 #include "DisplayManager.h"
 #include "TouchManager.h"
 #include "NetworkManager.h"
@@ -26,7 +27,7 @@ float currentTemp;
 float currentHum;
 
 // Global Variables of Feeder Client
-bool isFed;
+bool isFed = true;
 long lastFedTime;
 String lastDayChecked;
 bool isFeederAlarmActive = true;
@@ -47,19 +48,22 @@ void setup() {
   displayBox.drawStaticSplash(tft);
 
   // Connect WiFi while animating
-  timeBox.begin();
   netBox.begin(tft, displayBox);
+  timeBox.begin();
+  netBox.readFirebase(isFed, lastFedTime);
+  yield();
 
   tft.fillScreen(TFT_BLACK);
   displayBox.drawTaskbar(tft);
   switchPage(DESKTOP_PAGE);
-  netBox.readFirebase(isFed, lastFedTime);
+
   feederAlarmColor = isFed ? TFT_YELLOW : TFT_RED;
 }
 
 void loop() {
   netBox.handleOTA();
   netBox.handleFeederNetwork(isFed, lastFedTime, timeBox.getTimestamp());
+  netBox.handleOpenWeather();
 
   // Unified UI and Sensor Update (Every 1 second)
   if (millis() - lastUIUpdate >= 1000) {
@@ -80,7 +84,9 @@ void loop() {
         break;
 
       case WEATHER_PAGE:
-        displayBox.updateWeather(tft, currentTemp, currentHum);
+        if (!displayBox.isClockExpanded && !displayBox.isMenuOpen) {
+          displayBox.updateWeather(tft, currentPage, currentTemp, currentHum, netBox.currentWeather);
+        }
         break;
 
       case SYSTEM_PAGE:
@@ -111,14 +117,19 @@ void loop() {
         netBox.broadcastUDP("FEED_NOW");
         isFeederAlarmActive = true;
         feederAlarmColor = TFT_YELLOW;
-      }else{
+      } else {
         isFeederAlarmActive = true;
         feederAlarmColor = TFT_GREEN;
       }
 
-    } else if (timeBox.getHour() > 15 && !isFed) {
-      isFeederAlarmActive = true;
-      feederAlarmColor = TFT_RED;
+    } else if (timeBox.getHour() > 15) {
+      if (!isFed) {
+        isFeederAlarmActive = true;
+        feederAlarmColor = TFT_RED;
+      } else {
+        isFeederAlarmActive = true;
+        feederAlarmColor = TFT_GREEN;
+      }
     } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
       isFeederAlarmActive = true;
       feederAlarmColor = TFT_YELLOW;
@@ -231,6 +242,7 @@ void switchPage(Page targetPage) {
       displayBox.drawDesktopPage(tft);
       break;
     case WEATHER_PAGE:
+      displayBox.lastIcon = "";
       displayBox.drawHeader(tft, WEATHER_TITLE, 0x0063, 0xFFFF);
       displayBox.drawWeatherPage(tft);
       break;
