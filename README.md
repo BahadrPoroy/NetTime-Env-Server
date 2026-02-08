@@ -1,12 +1,15 @@
-# 🕒 NetTime-Env-Server V2.4.0-alpha 🌐
+# 🕒 NetTime-Env-Server v2.6.0-beta 🌐
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
 ![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ### "The NetTime OS - Premium TFT Edition"
 
-## ⚠️ Note: Version 2.5.0 is currently in Beta. While UI rendering issues (padding leaks) have been resolved, please report any bugs via GitHub Issues. ##
+## ⚠️ Note: This version is currently in Beta.
 
+- **Known Issues: Minor UI rendering artifacts (pixel padding or icon ghosting) may occur during rapid screen transitions or specific weather conditions.**
+
+- **Bug Reporting: If you encounter any functional or visual bugs, please report them via [GitHub Issues](https://github.com/BahadrPoroy/NetTime-Env-Server/issues) ##**
 ## 📸 Media
 
 <p align="center">
@@ -21,20 +24,27 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.5.0-Beta
+## 🚀 What's New in v2.6.0-beta
 
-- **Power Loss Recovery System**: On setup, system reads the isFed and lastFedTime for recovering the last data.
-  - **Enhanced Feeding Window**: Feeding time has been updated to a time range from a specific time. It provides a wide feeding time for data recovery.
-  - **IsFed State Icon**: a 16x16 system tray icon added to ***/Assets*** for showing to feeding status. Depending to isFed value and time the icon's color is changing. *Green means fish are fed. Yellow means waiting for feeding time and red means feeding is unsuccesful*  
+### 🌦 Weather Forecast Integration ###
+  - **TFT Forecast UI:** Real-time weather data from OpenWeather API is now displayed on the TFT screen.
+  - **Dynamic Icons:** Added support for high-quality BMP weather icons stored on the SD card.  
 
-- **System Tray Space**: A system tray area is allocated for system and alert icons to left of Wi-Fi signal icon.
-  - **Enhanced Returning to Desktop Navigation UI**: 
-    - **1 -** The home button, which is on the task bar is removed for getting the space free for system tray.
-    - **2 -** Title bar reworked: Instead of the home button, a cross button added on the right of *title bar* that's, in a red box. It provides returning to desktop page
-    - ***3 -*** *Feeding status icon has been added to this area*
+### 🐟 Feeder System & Power Recovery
+- **Enhanced Reliability:** Fixed a critical bug in the power loss recovery algorithm.
+- **Smart Fail-Safe:** The system now defaults to `isFed = true` during database read failures to prevent accidental overfeeding.
+- **Initialization Reordering:** Optimized the `begin` sequence of system modules (`netBox`, `timeBox`, `displayBox`) to ensure network stability before Firebase operations.
+- **Stability:** Added `yield()` calls to prevent watchdog resets during intensive network handshakes.
+
+### 📊 Display & UI Improvements
+- **RAM Monitor Fix:** Corrected the scaling logic for the RAM usage bar to provide an accurate representation of the heap memory.
+- **Layout Optimization:** Refactored the weather page layout; icons are now left-aligned with vertically stacked temperature and humidity data for better readability.
   
 
-## 🚧 Under Construction: The Home and Settings icons represent upcoming features. Navigation to these pages is currently restricted as we finalize the backend integration for these specific modules. ##
+## 🚧 Roadmap & Work in Progress ## 
+  The Home and Settings icons currently serve as placeholders for upcoming modules.
+  - **Status: Navigation to these pages is temporarily restricted while backend integrations are being finalized.**
+  - **Note: Features, module names, and UI elements in these sections are subject to change during development.**
 
 ## 📂 Project Structure
 
@@ -45,7 +55,8 @@ The project has been refactored from a single-file script into a modular, header
 * **TimeManager.h**: Manages NTP server synchronization and provides high-precision time formatting (`HH:MM:SS`) and date strings.
 * **TouchManager.h**: Processes touch panel inputs and maps them to screen coordinates using hardware-specific calibration data.
 * **config.h**: The Master Configuration file. Contains all pin assignments (HAL) and global system constants.
-* **myFonts.h**: All font headers are organized within a dedicated Fonts folder and consolidated into a single myFonts.h header. This centralized structure simplifies font library management and improves code readability. 
+* **myFonts.h**: All font headers are organized within a dedicated Fonts folder and consolidated into a single myFonts.h header. This centralized structure simplifies font library management and improves code readability.
+* **structs.h**: To ensure high `readability` and `ease of maintenance`, all global data structures (such as *WeatherData*) are centralized within this header file. This modular approach simplifies data management across the *NetworkManager* and *DisplayManager* classes.
 
 ## 🛠️ Hardware Requirements
 
@@ -67,7 +78,7 @@ NetTime-Env-Server(This Repo): The central hub that provides localized time, env
 
 ## 📡 Technology Stack
 - **Firmware:** Arduino IDE (C++), ArduinoJson, NTPClient.
-- **Backend:** Firebase Realtime Database.
+- **Backend:** Firebase Realtime Database, OpenWeather API.
 - **Frontend:** HTML5, CSS3 (Custom Variables), Vanilla JavaScript.
 - **Tracking:** Google Analytics GA4.
 
