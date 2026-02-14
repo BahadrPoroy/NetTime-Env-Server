@@ -113,7 +113,7 @@ void loop() {
     }
 
     if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15) {
-      if (!isFed) {
+      if (!isFed && (timeBox.getTimestamp() - lastFedTime > 180)) { //3 minutes diffrence for preventing rapidly repeated multi feed commands
         netBox.broadcastUDP("FEED_NOW");
         isFeederAlarmActive = true;
         feederAlarmColor = TFT_YELLOW;

@@ -386,11 +386,9 @@ public:
     if (weather.updated) {
       // Weather Icon
       if (currentPage == WEATHER_PAGE && weather.icon != lastIcon) {
-        // Önce eski ikonun yerini siyahla temizle
         tft.fillRect(19, 129, 66, 66, TFT_BLACK);
-        // Yeni ikonu çiz
         drawWeatherIcon(tft, weather.icon, 20, 130, 64, 64);
-        lastIcon = weather.icon;  // Gereksiz tekrar çizimi engelle
+        lastIcon = weather.icon;
         tft.fillRect(18, 192, 5, 5, TFT_BLACK);
       }
       // 2. Outdoor values
