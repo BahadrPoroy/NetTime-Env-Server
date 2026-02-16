@@ -1,4 +1,4 @@
-# 🕒 NetTime-Env-Server v2.6.1 🌐
+# 🕒 NetTime-Env-Server v2.6.2 🌐
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
 ![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
@@ -25,7 +25,7 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.6.1
+## 🚀 What's New in v2.6.2
 
 - **Status:** Stable for daily use.
 
@@ -53,7 +53,7 @@ While the original project was a standalone clock, this version transforms the d
 ## 📂 Project Structure
 
 ```
-text
+NetTime-Env-Server
 ├── config.h          # Master Configuration (Pins & Constants)
 ├── structs.h         # Centralized Data Structures (WeatherData, etc.)
 ├── DisplayManager.h  # UI Logic, Animations & TFT_eSPI Management

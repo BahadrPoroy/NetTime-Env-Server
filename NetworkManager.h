@@ -176,7 +176,7 @@ public:
     return 0;                        // No signal
   }
 
-  void handleFeederNetwork(bool &currentFedState, long &lastFedTime, long currentTimestamp) {
+  void handleFeederNetwork(String &currentFedState, bool &isFed, long &lastFedTime, long currentTimestamp) {
     int packetSize = udp.parsePacket();
 
     if (packetSize) {
@@ -186,11 +186,13 @@ public:
       String resp = String(buf);
       resp.trim();
 
-      if (resp == "FEED_SUCCESS") {
-        currentFedState = true;
+      currentFedState = resp;
+
+      if (resp == "SUCCESS") {
+        isFed = true;
         lastFedTime = currentTimestamp;
-      } else if (resp == "FEED_ERROR") {
-        currentFedState = false;
+      } else if (resp == "SYSTEM_READY_IDLE" || resp == "IDLE") {
+        currentFedState = "IDLE";
       }
     }
   }
