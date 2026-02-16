@@ -32,6 +32,7 @@
 #define SYS_STORAGE "Boş Depolama"
 #define TXT_FED "Yemlendi"
 #define TXT_WAIT "Bekleniyor"
+#define TXT_ERR "Yemleyici Hatası"
 #define TXT_FEEDER "Yemleyici"
 #define FEEDER_BTN TXT_FEEDER
 #define FEEDER_TITLE "YEMLEME SİSTEMİ"
@@ -67,6 +68,7 @@ const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe",
 #define SYS_STORAGE "Free Storage"
 #define TXT_FED "Fed"
 #define TXT_WAIT "Waiting"
+#define TXT_ERR "Feeder Error"
 #define TXT_FEEDER "Feeder"
 #define FEEDER_BTN TXT_FEEDER
 #define FEEDER_TITLE "FEEDER SYSTEM"

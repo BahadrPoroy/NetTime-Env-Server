@@ -27,8 +27,9 @@ float currentTemp;
 float currentHum;
 
 // Global Variables of Feeder Client
-bool isFed = true;
-long lastFedTime;
+bool isFed = false;
+String feederStatus = "IDLE";
+long lastFedTime = 0;
 String lastDayChecked;
 bool isFeederAlarmActive = true;
 uint16_t feederAlarmColor;
@@ -62,7 +63,7 @@ void setup() {
 
 void loop() {
   netBox.handleOTA();
-  netBox.handleFeederNetwork(isFed, lastFedTime, timeBox.getTimestamp());
+  netBox.handleFeederNetwork(feederStatus, isFed, lastFedTime, timeBox.getTimestamp());
   netBox.handleOpenWeather();
 
   // Unified UI and Sensor Update (Every 1 second)
@@ -96,7 +97,7 @@ void loop() {
         break;
 
       case FEEDER_PAGE:
-        displayBox.updateFeeder(tft, isFed);
+        displayBox.updateFeeder(tft, feederStatus, isFed);
         break;
 
       case SETTINGS_PAGE:
@@ -113,41 +114,40 @@ void loop() {
     }
 
     if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15) {
-      if (!isFed && (timeBox.getTimestamp() - lastFedTime > 180)) { //3 minutes diffrence for preventing rapidly repeated multi feed commands
-        netBox.broadcastUDP("FEED_NOW");
-        isFeederAlarmActive = true;
-        feederAlarmColor = TFT_YELLOW;
+      if (feederStatus == "ERROR_HARDWARE") {
+        feederAlarmColor = TFT_RED;  // Critical error, don't send command
+      } else if (!isFed) {
+        if (feederStatus == "PENDING") {
+          feederAlarmColor = TFT_YELLOW;
+        }
       } else {
-        isFeederAlarmActive = true;
-        feederAlarmColor = TFT_GREEN;
+        if (timeBox.getTimestamp() - lastFedTime > 180) {
+          netBox.broadcastUDP("FEED_NOW");
+          feederAlarmColor = TFT_YELLOW;
+        } else {
+          feederAlarmColor = TFT_GREEN;  // If is fed on current day it's green
+        }
       }
-
     } else if (timeBox.getHour() > 15) {
-      if (!isFed) {
-        isFeederAlarmActive = true;
-        feederAlarmColor = TFT_RED;
-      } else {
-        isFeederAlarmActive = true;
-        feederAlarmColor = TFT_GREEN;
-      }
+      feederAlarmColor = isFed ? TFT_GREEN : TFT_RED;
     } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
-      isFeederAlarmActive = true;
-      feederAlarmColor = TFT_YELLOW;
       isFed = false;
+      feederAlarmColor = TFT_YELLOW;
       lastDayChecked = timeBox.getDayName();
+      feederStatus = "IDLE";
     }
-  }
 
-  // --- 4. FIREBASE SYNC (Every 20 seconds) ---
-  if (millis() - lastFirebaseSync >= 20000) {
-    lastFirebaseSync = millis();
-    netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
-                          timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
-  }
+    // --- 4. FIREBASE SYNC (Every 20 seconds) ---
+    if (millis() - lastFirebaseSync >= 20000) {
+      lastFirebaseSync = millis();
+      netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
+                            timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
+    }
 
-  // --- 5. TOUCH CONTROLS ---
-  handleInput();
-  displayBox.drawSystemTray(tft, isFeederAlarmActive, feederAlarmColor);
+    // --- 5. TOUCH CONTROLS ---
+    handleInput();
+    displayBox.drawSystemTray(tft, isFeederAlarmActive, feederAlarmColor);
+  }
 }
 
 void handleInput() {

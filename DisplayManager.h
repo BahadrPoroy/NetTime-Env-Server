@@ -269,16 +269,23 @@ public:
 
   //-------------- UPDATE_FEEDER_PAGE ---------------
 
-  void updateFeeder(TFT_eSPI &tft, bool isFed) {
+  void updateFeeder(TFT_eSPI &tft, const String &feederStatus, const bool &isFed) {
     tft.loadFont(ATR20);
     tft.setTextDatum(TL_DATUM);
-
-    // IsFed?
-    uint16_t statusColor = isFed ? TFT_GREEN : 0xFCA0;  // Yeşil veya Turuncu
+    uint16_t statusColor;
+    String statusText;
+    if (feederStatus == "PENDING" || feederStatus == "SYSTEM_READY_IDLE" || feederStatus == "IDLE") {
+      statusColor = 0xFCA0;
+      statusText = String(TXT_WAIT);
+    } else if (feederStatus == "SUCCESS" || isFed) {
+      statusColor = TFT_GREEN;
+      statusText = String(TXT_FED);
+    } else {
+      statusColor = TFT_RED;
+      statusText = String(TXT_ERR);
+    }
     tft.setTextColor(statusColor, TFT_BLACK);
     tft.setTextPadding(tft.textWidth("Yemleme Bekliyor"));
-
-    String statusText = isFed ? String(TXT_FED) : String(TXT_WAIT);
     tft.drawString(statusText, 110, 35);
 
     tft.unloadFont();
@@ -701,16 +708,14 @@ public:
    * @param feederAlarm Current state of the feeder alert.
    * @param feederColor Color for the feeder icon (White/Red).
    */
-  void drawSystemTray(TFT_eSPI &tft, bool feederAlarm, uint16_t feederAlarmColor) {
-    static bool lastAlarmState = false;
+  void drawSystemTray(TFT_eSPI &tft, const bool &feederAlarm, uint16_t feederAlarmColor) {
     static uint16_t lastColor = 0;
     static int lastIconCount = -1;
 
-    if (feederAlarm == lastAlarmState && feederAlarmColor == lastColor) {
+    if (feederAlarmColor == lastColor) {
       return;
     }
 
-    lastAlarmState = feederAlarm;
     lastColor = feederAlarmColor;
     // Starting X (Just left of WiFi at 225)
     int cursorX = 220;
