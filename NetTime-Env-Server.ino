@@ -112,14 +112,15 @@ void loop() {
       displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
                                    timeBox.getDayName(), WiFi.SSID());
     }
+  }
 
-    if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15) {
-      if (feederStatus == "ERROR_HARDWARE") {
-        feederAlarmColor = TFT_RED;  // Critical error, don't send command
-      } else if (!isFed) {
-        if (feederStatus == "PENDING") {
-          feederAlarmColor = TFT_YELLOW;
-        }
+  // --- Feeding Control ---
+  if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15) {
+    if (feederStatus == "ERROR_HARDWARE") {
+      feederAlarmColor = TFT_RED;  // Critical error, don't send command
+    } else if (!isFed) {
+      if (feederStatus == "PENDING") {
+        feederAlarmColor = TFT_YELLOW;
       } else {
         if (timeBox.getTimestamp() - lastFedTime > 180) {
           netBox.broadcastUDP("FEED_NOW");
@@ -136,18 +137,18 @@ void loop() {
       lastDayChecked = timeBox.getDayName();
       feederStatus = "IDLE";
     }
-
-    // --- 4. FIREBASE SYNC (Every 20 seconds) ---
-    if (millis() - lastFirebaseSync >= 20000) {
-      lastFirebaseSync = millis();
-      netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
-                            timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
-    }
-
-    // --- 5. TOUCH CONTROLS ---
-    handleInput();
-    displayBox.drawSystemTray(tft, isFeederAlarmActive, feederAlarmColor);
   }
+
+  // --- 4. FIREBASE SYNC (Every 20 seconds) ---
+  if (millis() - lastFirebaseSync >= 20000) {
+    lastFirebaseSync = millis();
+    netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
+                          timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
+  }
+
+  // --- 5. TOUCH CONTROLS ---
+  handleInput();
+  displayBox.drawSystemTray(tft, isFeederAlarmActive, feederAlarmColor);
 }
 
 void handleInput() {
