@@ -119,7 +119,6 @@ void loop() {
       } else if (!isFed) {
         if (feederStatus == "PENDING") {
           feederAlarmColor = TFT_YELLOW;
-        }
       } else {
         if (timeBox.getTimestamp() - lastFedTime > 180) {
           netBox.broadcastUDP("FEED_NOW");
