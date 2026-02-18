@@ -191,7 +191,7 @@ public:
       if (resp == "SUCCESS") {
         isFed = true;
         lastFedTime = currentTimestamp;
-      } else if (resp == "SYSTEM_READY_IDLE" || resp == "IDLE") {
+      } else if (resp == "IDLE") {
         currentFedState = "IDLE";
       }
     }
