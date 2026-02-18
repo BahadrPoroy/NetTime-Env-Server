@@ -129,14 +129,16 @@ void loop() {
           feederAlarmColor = TFT_GREEN;  // If is fed on current day it's green
         }
       }
-    } else if (timeBox.getHour() > 15) {
-      feederAlarmColor = isFed ? TFT_GREEN : TFT_RED;
-    } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
-      isFed = false;
-      feederAlarmColor = TFT_YELLOW;
-      lastDayChecked = timeBox.getDayName();
-      feederStatus = "IDLE";
+    } else {
+      feederAlarmColor = TFT_GREEN;  // If is fed on current day it's green
     }
+  } else if (timeBox.getHour() > 15) {
+    feederAlarmColor = isFed ? TFT_GREEN : TFT_RED;
+  } else if (timeBox.getHour() == 0 && timeBox.getMinute() == 0 && lastDayChecked != timeBox.getDayName()) {
+    isFed = false;
+    feederAlarmColor = TFT_YELLOW;
+    lastDayChecked = timeBox.getDayName();
+    feederStatus = "IDLE";
   }
 
   // --- 4. FIREBASE SYNC (Every 20 seconds) ---
@@ -153,7 +155,8 @@ void loop() {
 
 void handleInput() {
   uint16_t x, y;
-  if (!touchBox.isPressed(tft, x, y)) return;
+  if (!touchBox.isPressed(tft, x, y))
+    return;
 
   x = 320 - x;  // Adjust for screen rotation
 
@@ -207,9 +210,12 @@ void handleInput() {
   // --- Page Specific Logic ---
   else if (currentPage == DESKTOP_PAGE) {
     if (y > 30 && y < 120) {
-      if (x > 10 && x < 75) switchPage(SYSTEM_PAGE);
-      else if (x > 85 && x < 155) switchPage(WEATHER_PAGE);
-      else if (x > 165 && x < 235) switchPage(FEEDER_PAGE);
+      if (x > 10 && x < 75)
+        switchPage(SYSTEM_PAGE);
+      else if (x > 85 && x < 155)
+        switchPage(WEATHER_PAGE);
+      else if (x > 165 && x < 235)
+        switchPage(FEEDER_PAGE);
     }
   } else if (currentPage == FEEDER_PAGE) {
     if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
@@ -224,13 +230,13 @@ void handleInput() {
   delay(250);
 }
 
-
-/* * Force redraws the current UI components to repair the screen 
+/* * Force redraws the current UI components to repair the screen
  * after a menu or overlay is closed.
  */
 
 void switchPage(Page targetPage) {
-  if (currentPage == targetPage) return;
+  if (currentPage == targetPage)
+    return;
   currentPage = targetPage;
   displayBox.isMenuOpen = false;
   displayBox.isClockExpanded = false;
