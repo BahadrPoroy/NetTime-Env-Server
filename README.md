@@ -1,4 +1,4 @@
-# 🕒 NetTime-Env-Server v2.6.2 🌐
+# 🕒 NetTime-Env-Server v2.7.0 🌐
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
 ![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
@@ -25,13 +25,14 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.6.2
+## 🚀 What's New in v2.7.0
 
 - **Status:** Stable for daily use.
 
-### 🌦 Weather Forecast Integration ###
+<!-- ### 🌦 Weather Forecast Integration ###
   - **TFT Forecast UI:** Real-time weather data from OpenWeather API is now displayed on the TFT screen.
   - **Dynamic Icons:** Added support for high-quality BMP weather icons stored on the SD card.  
+-->
 
 ### 🐟 Feeder System & Power Recovery
 - **Anti-Spam Logic (v2.6.1):** Implemented a 180-second cooldown between feeding commands to prevent redundant triggers caused by network latency.
@@ -41,12 +42,22 @@ While the original project was a standalone clock, this version transforms the d
 - **Stability:** Added `yield()` calls to prevent watchdog resets during intensive network handshakes.
 
 ### 📊 Display & UI Improvements
-- **RAM Monitor Fix:** Corrected the scaling logic for the RAM usage bar to provide an accurate representation of the heap memory.
-- **Layout Optimization:** Refactored the weather page layout; icons are now left-aligned with vertically stacked temperature and humidity data for better readability.
+- **Home Page has been activated:** Home page is now active with base data showcase, There are 3 segments `tempeture (indoor & outdoor)`,`time`and `feeder status`. It provides seing more information on one page.
+- **Icon Update:** Home icon is enchanced with a modern one
+- **Layout Refactoring:** Added home page button and refactored layout of the desktop page icons.
   
+### 📂 Folder & File Structure Improvements
+- **Homepage Icons Moved:** In `Assets` folder, a new folder has been created called as `Page_Icons` and all of the desktop icons has been moved in this folder for creating a tidier project structure.
+
+- ### ⚠️ In `drawDesktopPage` function, that in the `displayManager.h` icon paths are updated ###
 
 ## 🚧 Roadmap & Work in Progress ## 
-  The Home and Settings icons currently serve as placeholders for upcoming modules.
+  The Settings icon currently serves as placeholders for upcoming modules.
+  - ### Future Plan About Settings Page ###
+    - **Adding a slider for adjusting the screen brightness**
+    - **Language option for changing the language on runtime**
+    - **Adjusting feeding times on settings**
+    - **Theme/color change section**
   - **Status: Navigation to these pages is temporarily restricted while backend integrations are being finalized.**
   - **Note: Features, module names, and UI elements in these sections are subject to change during development.**
 

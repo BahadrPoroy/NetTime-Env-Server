@@ -9,7 +9,7 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.6.1 (2026)"
+#define VERSION "NetTime OS v2.7.0 (2026)"
 
 // Definition of icon height & width values
 #define ICON_W 32
@@ -204,14 +204,34 @@ public:
   //-------------- HOME_PAGE -------------------
 
   void drawHomePage(TFT_eSPI &tft) {
-    tft.loadFont(ATR12);
+    int startX = 10;
+    int startY = 40;
+    int spaceX = 30;
+    int spaceY = 25;
+    int centerX = 160;
+    tft.loadFont(ATR16);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextDatum(TL_DATUM);
+    tft.setTextDatum(TC_DATUM);
 
-    // Etiketler
-    tft.drawString(String(TXT_TIME) + ":", 10, 35);
-    tft.drawString(String(TXT_TEMP) + ":", 10, 75);
-    tft.drawString(String(TXT_FEEDER) + ":", 10, 115);
+    // seperators
+    tft.drawFastHLine(0, startY + (2 *spaceY), 320, 0x319F);
+    tft.drawFastHLine(0, startY + (3.5 * spaceY) + 5, 320, 0x319F);
+
+    // labels
+    tft.drawString(String(TXT_TEMP), centerX, startY);
+    tft.setTextDatum(TL_DATUM);
+    tft.unloadFont();
+
+    tft.loadFont(ATR20);
+    tft.drawString(String(TXT_INDOOR_TEMP) + ":", startX, startY + spaceY);
+    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88 °C") + spaceX;
+    if (secondRow <= 160) secondRow = centerX + spaceX;
+    tft.drawString(String(TXT_OUTDOOR_TEMP) + ":", secondRow, startY + spaceY);
+    tft.unloadFont();
+
+    tft.loadFont(ATR16);
+    tft.setTextDatum(TC_DATUM);
+    tft.drawString(String(TXT_FEEDER), centerX, startY + (4 * spaceY));
 
     tft.unloadFont();
   }
@@ -220,29 +240,43 @@ public:
 
   //-------------- UPDATE_HOME_PAGE ---------------
 
-  void updateHome(TFT_eSPI &tft, bool isFed, String timeStr, float temp) {
-    tft.loadFont(ATR20);
+  void updateHome(TFT_eSPI &tft, bool isFed, String timeStr, float intemp, const WeatherData &weather) {
+
+    int startX;
+    int startY = 40;
+    int spaceX = 30;
+    int spaceY = 25;
+    int centerX = 160;
     tft.setTextDatum(TL_DATUM);
 
-    // Clock
-    tft.setTextColor(0x04DF, TFT_BLACK);  // Turkuaz
-    tft.setTextPadding(tft.textWidth("88:88"));
-    tft.drawString(timeStr, 110, 35);
-
     // Temperature
+    tft.loadFont(ATR20);
     tft.setTextColor(0x04DF, TFT_BLACK);
     tft.setTextPadding(tft.textWidth("88.8 °C"));
-    tft.drawString(String(temp, 1) + " °C", 110, 75);
+    tft.drawString(String(intemp, 1) + " °C", tft.textWidth(TXT_INDOOR_TEMP) + spaceX, startY + spaceY);
+    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88 °C") + spaceX;
+    if (secondRow <= 160) secondRow = centerX + tft.textWidth(TXT_INDOOR_TEMP) + 2 * spaceX;
+    tft.drawString(String(weather.temp, 1) + " °C", secondRow, startY + spaceY);
+    tft.unloadFont();
+
+    // Clock
+    tft.loadFont(ATR24);
+    tft.setTextDatum(TC_DATUM);
+    tft.setTextColor(0x04DF, TFT_BLACK);  // Turkuaz
+    tft.setTextPadding(tft.textWidth("88:88:88"));
+    tft.drawString(timeStr, centerX, startY + 2.5 * spaceY);
+    tft.unloadFont();
 
     // IsFed?
+    tft.loadFont(ATR20);
     uint16_t statusColor = isFed ? TFT_GREEN : 0xFCA0;  // Yeşil veya Turuncu
     tft.setTextColor(statusColor, TFT_BLACK);
     tft.setTextPadding(tft.textWidth("Yemleme Bekliyor"));
 
     String statusText = isFed ? String(TXT_FED) : String(TXT_WAIT);
-    tft.drawString(statusText, 110, 115);
-
+    tft.drawString(statusText, centerX, startY + 5 * spaceY);
     tft.unloadFont();
+
     tft.setTextPadding(0);
   }
 
@@ -274,7 +308,7 @@ public:
     tft.setTextDatum(TL_DATUM);
     uint16_t statusColor;
     String statusText;
-    if (feederStatus == "PENDING" || feederStatus == "SYSTEM_READY_IDLE" || feederStatus == "IDLE") {
+    if (feederStatus == "PENDING" || feederStatus == "IDLE" && !isFed) {
       statusColor = 0xFCA0;
       statusText = String(TXT_WAIT);
     } else if (feederStatus == "SUCCESS" || isFed) {
@@ -557,27 +591,34 @@ public:
     int startX = 36;
     int startY = 40;
     int spacingX = 82;
+    int spacingY = 90;
+    int nameSpacing = 52;
     //---------------
 
+    //Home
+    drawMonoIcon(tft, "/Page_Icons/home.bmp", startX - 16, startY, ICON_W, ICON_H, 0x04DF);
+    tft.setTextPadding(tft.textWidth(HOME_BTN));
+    tft.drawString(HOME_BTN, startX, startY + nameSpacing);
+
     // System
-    drawMonoIcon(tft, "/system.bmp", startX - 16, startY, ICON_W, ICON_H, 0x04DF);
+    drawMonoIcon(tft, "/Page_Icons/system.bmp", (startX + spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(SYSTEM_BTN));
-    tft.drawString(SYSTEM_BTN, startX, startY + 52);
+    tft.drawString(SYSTEM_BTN, startX + spacingX, startY + nameSpacing);
 
     // Weather
-    drawMonoIcon(tft, "/weather.bmp", (startX + spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
+    drawMonoIcon(tft, "/Page_Icons/weather.bmp", (startX + 2 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(WEATHER_BTN));
-    tft.drawString(WEATHER_BTN, (startX + spacingX), startY + 52);
+    tft.drawString(WEATHER_BTN, (startX + 2 * spacingX), startY + nameSpacing);
 
     // Feeder
-    drawMonoIcon(tft, "/feeder.bmp", (startX + 2 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
+    drawMonoIcon(tft, "/Page_Icons/feeder.bmp", (startX + 3 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(FEEDER_BTN));
-    tft.drawString(TXT_FEEDER, (startX + 2 * spacingX), startY + 52);
+    tft.drawString(TXT_FEEDER, (startX + 3 * spacingX), startY + nameSpacing);
 
     // Settings
-    drawMonoIcon(tft, "/settings.bmp", (startX + 3 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
+    drawMonoIcon(tft, "/Page_Icons/settings.bmp", startX - 16, startY + spacingY, ICON_W, ICON_H, 0x04DF);
     tft.setTextPadding(tft.textWidth(SETTINGS_BTN));
-    tft.drawString(SETTINGS_BTN, (startX + 3 * spacingX), startY + 52);
+    tft.drawString(SETTINGS_BTN, startX, (startY + spacingY) + nameSpacing);
     tft.unloadFont();
     tft.setTextPadding(0);
   }

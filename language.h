@@ -18,6 +18,7 @@
 #define SETTINGS_BTN "Ayarlar"
 #define SYSTEM_TITLE "SİSTEM"
 #define HOME_TITLE "ANA SAYFA"
+#define HOME_BTN "Ana Sayfa"
 #define SYSTEM_BTN "Sistem"
 #define TXT_RESTART "Yeniden\nBaşlat"
 #define TXT_CONSOLE "Sistem Paneli"
@@ -38,6 +39,8 @@
 #define FEEDER_TITLE "YEMLEME SİSTEMİ"
 #define TXT_INDOOR "ODA HAVASI"
 #define TXT_OUTDOOR "DIŞ HAVA DURUMU"
+#define TXT_INDOOR_TEMP "İÇ"
+#define TXT_OUTDOOR_TEMP "DIŞ"
 #define TXT_UPDATING "Güncelleniyor..."
 const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi" };
 #else
@@ -55,6 +58,7 @@ const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe",
 #define SYSTEM_TITLE "SYSTEM"
 #define SYSTEM_BTN "System"
 #define HOME_TITLE "HOME"
+#define HOME_BTN "Home"
 #define TXT_RESTART "Restart"
 #define TXT_CONSOLE "Console"
 #define TXT_NET "Network"
@@ -74,6 +78,8 @@ const char* days[] = { "Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe",
 #define FEEDER_TITLE "FEEDER SYSTEM"
 #define TXT_INDOOR "INDOOR"
 #define TXT_OUTDOOR "OUTDOOR"
+#define TXT_INDOOR_TEMP "INDOOR TEMP"
+#define TXT_OUTDOOR_TEMP "OUTDOOR TEMP"
 #define TXT_UPDATING "Updating..."
 const char* days[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 #endif

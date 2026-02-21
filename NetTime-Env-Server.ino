@@ -81,7 +81,7 @@ void loop() {
 
     switch (currentPage) {
       case HOME_PAGE:
-        displayBox.updateHome(tft, isFed, timeBox.getFormattedTime(), currentTemp);
+        displayBox.updateHome(tft, isFed, timeBox.getFormattedTime(), currentTemp, netBox.currentWeather);
         break;
 
       case WEATHER_PAGE:
@@ -211,11 +211,17 @@ void handleInput() {
   else if (currentPage == DESKTOP_PAGE) {
     if (y > 30 && y < 120) {
       if (x > 10 && x < 75)
-        switchPage(SYSTEM_PAGE);
+        switchPage(HOME_PAGE);
       else if (x > 85 && x < 155)
-        switchPage(WEATHER_PAGE);
+        switchPage(SYSTEM_PAGE);
       else if (x > 165 && x < 235)
+        switchPage(WEATHER_PAGE);
+      else if (x > 245 && x < 315)
         switchPage(FEEDER_PAGE);
+    } else if (y > 130 && y < 220) {
+      if (x > 10 && x < 75) {
+        //switchPage(SETTINGS_PAGE);
+      }
     }
   } else if (currentPage == FEEDER_PAGE) {
     if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
