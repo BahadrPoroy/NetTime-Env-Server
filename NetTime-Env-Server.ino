@@ -81,7 +81,7 @@ void loop() {
 
     switch (currentPage) {
       case HOME_PAGE:
-        displayBox.updateHome(tft, isFed, timeBox.getFormattedTime(), currentTemp, netBox.currentWeather);
+        displayBox.updateHome(tft, feederStatus, isFed, timeBox.getFormattedTime(), currentTemp, netBox.currentWeather);
         break;
 
       case WEATHER_PAGE:

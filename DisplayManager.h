@@ -9,7 +9,7 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.7.0 (2026)"
+#define VERSION "NetTime OS v2.7.1 (2026)"
 
 // Definition of icon height & width values
 #define ICON_W 32
@@ -214,7 +214,7 @@ public:
     tft.setTextDatum(TC_DATUM);
 
     // seperators
-    tft.drawFastHLine(0, startY + (2 *spaceY), 320, 0x319F);
+    tft.drawFastHLine(0, startY + (2 * spaceY), 320, 0x319F);
     tft.drawFastHLine(0, startY + (3.5 * spaceY) + 5, 320, 0x319F);
 
     // labels
@@ -240,7 +240,7 @@ public:
 
   //-------------- UPDATE_HOME_PAGE ---------------
 
-  void updateHome(TFT_eSPI &tft, bool isFed, String timeStr, float intemp, const WeatherData &weather) {
+  void updateHome(TFT_eSPI &tft, const String &feederStatus, bool isFed, String timeStr, float intemp, const WeatherData &weather) {
 
     int startX;
     int startY = 40;
@@ -262,18 +262,27 @@ public:
     // Clock
     tft.loadFont(ATR24);
     tft.setTextDatum(TC_DATUM);
-    tft.setTextColor(0x04DF, TFT_BLACK);  // Turkuaz
+    tft.setTextColor(0x04DF, TFT_BLACK);
     tft.setTextPadding(tft.textWidth("88:88:88"));
     tft.drawString(timeStr, centerX, startY + 2.5 * spaceY);
     tft.unloadFont();
 
     // IsFed?
     tft.loadFont(ATR20);
-    uint16_t statusColor = isFed ? TFT_GREEN : 0xFCA0;  // Yeşil veya Turuncu
+    uint16_t statusColor;
+    String statusText;
+    if (feederStatus == "PENDING" || feederStatus == "IDLE" && !isFed) {
+      statusColor = 0xFCA0;
+      statusText = String(TXT_WAIT);
+    } else if (feederStatus == "SUCCESS" || isFed) {
+      statusColor = TFT_GREEN;
+      statusText = String(TXT_FED);
+    } else {
+      statusColor = TFT_RED;
+      statusText = String(TXT_ERR);
+    }
     tft.setTextColor(statusColor, TFT_BLACK);
     tft.setTextPadding(tft.textWidth("Yemleme Bekliyor"));
-
-    String statusText = isFed ? String(TXT_FED) : String(TXT_WAIT);
     tft.drawString(statusText, centerX, startY + 5 * spaceY);
     tft.unloadFont();
 
