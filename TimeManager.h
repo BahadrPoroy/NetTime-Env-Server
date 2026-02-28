@@ -60,7 +60,7 @@ public:
   String getDayName() {
     updateInternalTime();
     // tm_wday returns 0 for Sunday, 1 for Monday, etc.
-    return String(days[timeinfo.tm_wday]);
+    return String(dayNames[timeinfo.tm_wday][settingsData.language]);
 }
 };
 

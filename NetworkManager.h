@@ -146,6 +146,38 @@ public:
     Firebase.setInt(firebaseData, "/NetTime/lastFedTime", lastFedTime);
   }
 
+  //--- Firebase Read for Settings ---
+  void readSettings(SettingsData &settings) {
+    if (Firebase.getJSON(firebaseData, "/Settings")) {
+      FirebaseJson settingsJson = firebaseData.jsonObject();
+      FirebaseJsonData data;
+
+      if (settingsJson.get(data, "feederStart"))
+        settings.feederStart = data.intValue;
+      if (settingsJson.get(data, "feederEnd"))
+        settings.feederEnd = data.intValue;
+      if (settingsJson.get(data, "dayBright"))
+        settings.dayBright = data.intValue;
+      if (settingsJson.get(data, "nightBright"))
+        settings.nightBright = data.intValue;
+      if (settingsJson.get(data, "isAdaptive"))
+        settings.isAdaptive = data.boolValue;
+      if (settingsJson.get(data, "language"))
+        settings.language = data.intValue;
+    }
+  }
+  // --- // // // --- //
+
+  // --- Firebase Update for Settings ---
+  void updateSetting(String key, int value) {
+    Firebase.setInt(firebaseData, "/Settings/" + key, value);
+  }
+
+  // Overload: Bool değerler için (isAdaptive)
+  void updateSetting(String key, bool value) {
+    Firebase.setBool(firebaseData, "/Settings/" + key, value);
+  }
+
   void readFirebase(bool &isFed, long &lastFedTime) {
     if (Firebase.getBool(firebaseData, "/NetTime/isFed")) {
       isFed = firebaseData.boolData();

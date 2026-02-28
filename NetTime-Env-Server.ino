@@ -3,6 +3,10 @@
 #include <SD.h>
 #include "config.h"
 #include "structs.h"
+
+extern SettingsData settingsData; 
+SettingsData settingsData;
+
 #include "DisplayManager.h"
 #include "TouchManager.h"
 #include "NetworkManager.h"
@@ -15,6 +19,7 @@ DisplayManager displayBox;
 TouchManager touchBox;
 NetworkManager netBox;
 TimeManager timeBox;
+
 
 unsigned long lastClockUpdate = 0;
 unsigned long lastSensorUpdate = 0;
@@ -57,7 +62,7 @@ void setup() {
   tft.fillScreen(TFT_BLACK);
   displayBox.drawTaskbar(tft);
   switchPage(DESKTOP_PAGE);
-
+  netBox.readSettings(settingsData);
   feederAlarmColor = isFed ? TFT_YELLOW : TFT_RED;
 }
 
@@ -276,6 +281,8 @@ void switchPage(Page targetPage) {
       break;
 
     case SETTINGS_PAGE:
+      displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawSettingsPage(tft, settingsData);
       break;
 
     default:

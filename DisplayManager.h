@@ -9,7 +9,7 @@
 #include "language.h"
 #include "Fonts/myFonts.h"
 
-#define VERSION "NetTime OS v2.7.1 (2026)"
+#define VERSION "NetTime OS v2.8.0 (2026)"
 
 // Definition of icon height & width values
 #define ICON_W 32
@@ -741,6 +741,7 @@ public:
         break;
 
       case SETTINGS_PAGE:
+        drawSettingsPage(tft, settingsData);
         break;
 
       case DESKTOP_PAGE:
@@ -801,5 +802,27 @@ public:
     }
   }
   //----- SYSTEM TRAY END -----
+
+  //--- SETTINGS PAGE ---
+  void drawSettingsPage(TFT_eSPI &tft, SettingsData &settings) {
+    tft.loadFont(ATR20);
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(TFT_WHITE, 0x0112);
+    tft.drawString(String(OPT_ADAPTIVE), 10, 40);
+    //tft.drawToggleButton(200, 10, settings.isAdaptive);
+
+    // 2. seperator
+    tft.drawFastHLine(0, 50, 320, 0x319F);
+
+    // 3. Dynamic Area (Depends on Adaptive Brightness)
+    if (settings.isAdaptive) {
+      // IF ADAPTIVE IS ON
+      //tft.drawSlider(10, 80, "Day Bright:", settings.dayBright);
+      //tft.drawSlider(10, 140, "Night Bright:", settings.nightBright);
+    } else {
+      // IF ADAPTIVE IS OFF
+      //tft.drawSlider(10, 80, "Manual Bright:", settings.manBright);
+    }
+  }
 };
 #endif

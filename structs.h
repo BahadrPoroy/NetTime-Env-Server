@@ -11,4 +11,14 @@ struct WeatherData {
   bool updated = false;
 };
 
+struct SettingsData {
+  int feederStart;
+  int feederEnd;
+  int manBright;
+  int dayBright;
+  int nightBright;
+  bool isAdaptive;
+  int language;
+};
+
 #endif
