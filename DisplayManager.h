@@ -302,8 +302,8 @@ public:
     tft.fillRect(100, 100, 120, 40, 0x04DF);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(TFT_WHITE, 0x04DF);
-    tft.setTextPadding(tft.textWidth(FEEDER_BTN));
-    tft.drawString(FEEDER_BTN, 160, 120);
+    tft.setTextPadding(tft.textWidth(TXT_FEEDER));
+    tft.drawString(TXT_FEEDER, 160, 120);
     tft.unloadFont();
     tft.setTextPadding(0);
   }
@@ -593,7 +593,7 @@ public:
   //------ DESKTOP PAGE -----
   void drawDesktopPage(TFT_eSPI &tft) {
     tft.fillRect(0, 0, 320, 30, TFT_BLACK);
-    tft.loadFont(ATR16);
+    tft.loadFont(ATR12);
     tft.setTextDatum(BC_DATUM);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     // Grid Settings
@@ -621,7 +621,7 @@ public:
 
     // Feeder
     drawMonoIcon(tft, "/Page_Icons/feeder.bmp", (startX + 3 * spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
-    tft.setTextPadding(tft.textWidth(FEEDER_BTN));
+    tft.setTextPadding(tft.textWidth(TXT_FEEDER));
     tft.drawString(TXT_FEEDER, (startX + 3 * spacingX), startY + nameSpacing);
 
     // Settings
@@ -747,7 +747,9 @@ public:
       case DESKTOP_PAGE:
         drawDesktopPage(tft);
         break;
-
+      case DISPLAY_SETTINGS:
+        drawDisplaySettingsPage(tft, settingsData);
+        break;
       default:
         break;
     }
@@ -803,26 +805,110 @@ public:
   }
   //----- SYSTEM TRAY END -----
 
-  //--- SETTINGS PAGE ---
+  // --- TOGGLE BUTTON DRAWING ---
+  void drawToggleButton(TFT_eSPI &tft, int x, int y, bool state) {
+    int width = 50;
+    int height = 25;
+    uint16_t trackColor = state ? 0x04DF : 0x0063;  // Cyan (On) : Dark Blue (Off)
+    uint16_t knobColor = TFT_WHITE;
+
+    // 1. (Smooth Rectangle)
+    tft.fillRoundRect(x, y, width, height, height / 2, trackColor);
+
+    // 2. Outer line
+    tft.drawRoundRect(x, y, width, height, height / 2, TFT_WHITE);
+
+    // 3. Button (Knob)
+    int knobRadius = (height / 2) - 4;
+    int knobY = y + (height / 2);
+    int knobX = state ? (x + width - (height / 2)) : (x + (height / 2));
+
+    tft.fillCircle(knobX, knobY, knobRadius, knobColor);
+  }
+
+  // --- SETTINGS PAGE ---
   void drawSettingsPage(TFT_eSPI &tft, SettingsData &settings) {
+    tft.loadFont(ATR12);
+    tft.setTextDatum(BC_DATUM);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    // Grid Settings
+    int startX = 36;
+    int startY = 40;
+    int spacingX = 82;
+    int spacingY = 90;
+    int nameSpacing = 52;
+    //---------------
+
+    //Language
+    //drawMonoIcon(tft, "/Page_Icons/home.bmp", startX - 16, startY, ICON_W, ICON_H, 0x04DF);
+    tft.setTextPadding(tft.textWidth(HOME_BTN));
+    tft.drawString("Language", startX, startY + nameSpacing);
+
+    // Screen
+    //drawMonoIcon(tft, "/Page_Icons/system.bmp", (startX + spacingX) - 16, startY, ICON_W, ICON_H, 0x04DF);
+    tft.setTextPadding(tft.textWidth(SYSTEM_BTN));
+    tft.drawString("Display", startX + spacingX, startY + nameSpacing);
+  }
+
+  //--- DISPLAY SETTINGS PAGE ---
+  void drawDisplaySettingsPage(TFT_eSPI &tft, SettingsData &settings) {
     tft.loadFont(ATR20);
     tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(TFT_WHITE, 0x0112);
+    tft.setTextColor(0x04DF, TFT_BLACK);
+
+    tft.setTextPadding(tft.textWidth(OPT_ADAPTIVE));
     tft.drawString(String(OPT_ADAPTIVE), 10, 40);
-    //tft.drawToggleButton(200, 10, settings.isAdaptive);
+
+    drawToggleButton(tft, 220, 35, settings.isAdaptive);
 
     // 2. seperator
-    tft.drawFastHLine(0, 50, 320, 0x319F);
+    tft.drawFastHLine(0, 60, 320, 0x319F);
 
     // 3. Dynamic Area (Depends on Adaptive Brightness)
     if (settings.isAdaptive) {
       // IF ADAPTIVE IS ON
-      //tft.drawSlider(10, 80, "Day Bright:", settings.dayBright);
-      //tft.drawSlider(10, 140, "Night Bright:", settings.nightBright);
+      tft.drawString("Day Brightness: ", 10, 80);
+      tft.drawString(String(settings.dayBright), 310 - tft.textWidth("255"), 80);
+      tft.drawString("Night Brightness: ", 10, 120);
+      tft.drawString(String(settings.nightBright), 310 - tft.textWidth("255"), 120);
     } else {
       // IF ADAPTIVE IS OFF
-      //tft.drawSlider(10, 80, "Manual Bright:", settings.manBright);
+      tft.drawString("Brightness: ", 10, 80);
+      tft.drawString(String(settings.manBright), 310 - tft.textWidth("255"), 80);
     }
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+
+  // --- SUB BRIGHTNESS SETTINGS ---
+  void drawBrightnessSubSettings(TFT_eSPI &tft, SettingsData &settings) {
+    // 1. Alt alanı temizle (Sadece etkilenen bölge)
+    tft.fillRect(0, 80, 320, 80, TFT_BLACK);
+    tft.loadFont(ATR20);
+    tft.setTextDatum(TL_DATUM);
+    if (!settings.isAdaptive) {
+      // --- MANUEL MOD GÖRÜNÜMÜ ---
+      // Başlık (Siyah üzerine Aktif Renk)
+      tft.setTextColor(0x04DF, TFT_BLACK);
+      tft.drawString("Brightness: ", 10, 80);
+      tft.drawString(String(settings.manBright), 310 - tft.textWidth("255"), 80);
+      // Aktif Bar (0x04DF dolgulu, beyaz yazılı)
+      //drawStyledBar(tft, 160, 150, settingsData.manBright, 0x04DF);
+    } else {
+      // --- ADAPTİF MOD GÖRÜNÜMÜ ---
+      // Gündüz Ayarı (Aktif)
+      tft.setTextColor(0x04DF, TFT_BLACK);
+      tft.drawString("Day Brightness: ", 10, 80);
+      tft.drawString(String(settings.dayBright), 310 - tft.textWidth("255"), 80);
+      //drawStyledBar(tft, 220, 130, settingsData.dayBright, 0x04DF, true);  // true = küçük bar
+
+      // Gece Ayarı (Daha loş/pasif görünebilir veya ikisi de aktif kalabilir)
+      tft.drawString("Night Brightness: ", 10, 120);
+      tft.drawString(String(settings.nightBright), 310 - tft.textWidth("255"), 120);
+      //drawStyledBar(tft, 220, 180, settingsData.nightBright, 0x04DF, true);
+    }
+    tft.unloadFont();
   }
 };
 #endif

@@ -4,7 +4,7 @@
 #include "config.h"
 #include "structs.h"
 
-extern SettingsData settingsData; 
+extern SettingsData settingsData;
 SettingsData settingsData;
 
 #include "DisplayManager.h"
@@ -60,10 +60,10 @@ void setup() {
   yield();
 
   tft.fillScreen(TFT_BLACK);
-  displayBox.drawTaskbar(tft);
-  switchPage(DESKTOP_PAGE);
   netBox.readSettings(settingsData);
   feederAlarmColor = isFed ? TFT_YELLOW : TFT_RED;
+  displayBox.drawTaskbar(tft);
+  switchPage(DESKTOP_PAGE);
 }
 
 void loop() {
@@ -213,7 +213,7 @@ void handleInput() {
     }
   }
   // --- Page Specific Logic ---
-  else if (currentPage == DESKTOP_PAGE) {
+  if (currentPage == DESKTOP_PAGE) {
     if (y > 30 && y < 120) {
       if (x > 10 && x < 75)
         switchPage(HOME_PAGE);
@@ -225,15 +225,45 @@ void handleInput() {
         switchPage(FEEDER_PAGE);
     } else if (y > 130 && y < 220) {
       if (x > 10 && x < 75) {
-        //switchPage(SETTINGS_PAGE);
+        switchPage(SETTINGS_PAGE);
+      }
+    }
+  } else if (currentPage == SETTINGS_PAGE) {
+    if (x > 290 && y < 30) {
+      switchPage(DESKTOP_PAGE);
+    }
+    if (y > 30 && y < 120) {
+      if (x > 10 && x < 75)
+        switchPage(LANGUAGE_SETTINGS);
+      else if (x > 85 && x < 155)
+        switchPage(DISPLAY_SETTINGS);
+    }
+  } else if (currentPage == DISPLAY_SETTINGS || currentPage == LANGUAGE_SETTINGS) {
+    if (x > 290 && y < 30) {
+      switchPage(SETTINGS_PAGE);
+    }
+    if (currentPage == DISPLAY_SETTINGS) {
+      if (y > 32 & y < 65) {
+        if (x > 215 & x < 275) {
+          settingsData.isAdaptive = !settingsData.isAdaptive;
+          displayBox.drawToggleButton(tft, 220, 35, settingsData.isAdaptive);
+          displayBox.drawBrightnessSubSettings(tft, settingsData);
+          netBox.updateSetting("isAdaptive", settingsData.isAdaptive);
+        }
+      }
+    } else if (currentPage == LANGUAGE_SETTINGS) {
+      if (x > 290 && y < 30) {
+        switchPage(SETTINGS_PAGE);
       }
     }
   } else if (currentPage == FEEDER_PAGE) {
+    if (x > 290 && y < 30) {
+      switchPage(DESKTOP_PAGE);
+    }
     if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
       netBox.broadcastUDP("FEED_NOW");
     }
-  }
-  if (currentPage != DESKTOP_PAGE) {
+  } else {
     if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
     }
@@ -284,7 +314,13 @@ void switchPage(Page targetPage) {
       displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
       displayBox.drawSettingsPage(tft, settingsData);
       break;
-
+    case LANGUAGE_SETTINGS:
+      displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
+      break;
+    case DISPLAY_SETTINGS:
+      displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawDisplaySettingsPage(tft, settingsData);
+      break;
     default:
       break;
   }
