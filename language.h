@@ -37,8 +37,15 @@ const char* const langTable[][2] = {
   { "OUTDOOR", "DIŞ HAVA DURUMU" },                                             // 31
   { "INDOOR TEMP", "İÇ" },                                                      // 32
   { "OUTDOOR TEMP", "DIŞ" },                                                    // 33
-  { "Updating...", "Güncelleniyor..." },                                         // 34
-  { "Adaptive Brightness", "Adaptif Parlaklık" }                                //35
+  { "Updating...", "Güncelleniyor..." },                                        // 34
+  { "Language", "Dil" },                                                        //35
+  { "Display", "Ekran" },                                                       //36
+  { "Adaptive Brightness", "Adaptif Parlaklık" },                               //37
+  { "Brightness", "Parlaklık" },                                                //38
+  { "Day Brightness", "Gündüz Parlaklığı" },                                    //39
+  { "Night Brightness", "Gece Parlaklığı" },                                    //40
+  { "Feeder Start", "Yemleme Başlangıcı" },                                     //41
+  { "Feeder End", "Yemleme Bitişi" }                                            //42
 };
 
 // --- 2. Week day names ---
@@ -47,7 +54,7 @@ const char* const dayNames[7][2] = {
 };
 
 // --- 3. AKILLI MAKROLAR (Kodun bozulmaması için) ---
-// Old names are compatible with new table provide of these macros 
+// Old names are compatible with new table provide of these macros
 // settingsData.language, EN = 0, TR = 1 for now.
 
 #define WEB_TEMP langTable[0][settingsData.language]
@@ -79,13 +86,21 @@ const char* const dayNames[7][2] = {
 #define TXT_WAIT langTable[26][settingsData.language]
 #define TXT_ERR langTable[27][settingsData.language]
 #define TXT_FEEDER langTable[28][settingsData.language]
-#define FEEDER_BTN langTable[29][settingsData.language]
+#define FEEDER_BTN TXT_FEEDER
 #define FEEDER_TITLE langTable[29][settingsData.language]
 #define TXT_INDOOR langTable[30][settingsData.language]
 #define TXT_OUTDOOR langTable[31][settingsData.language]
 #define TXT_INDOOR_TEMP langTable[32][settingsData.language]
 #define TXT_OUTDOOR_TEMP langTable[33][settingsData.language]
 #define TXT_UPDATING langTable[34][settingsData.language]
-#define OPT_ADAPTIVE langTable[35][settingsData.language]
+#define OPT_LANGUAGE langTable[35][settingsData.language]
+#define OPT_DISPLAY langTable[36][settingsData.language]
+#define OPT_FEEDER TXT_FEEDER
+#define OPT_ADAPTIVE langTable[37][settingsData.language]
+#define OPT_MAN_BRIGHT langTable[38][settingsData.language]
+#define OPT_DAY_BRIGHT langTable[39][settingsData.language]
+#define OPT_NIGHT_BRIGHT langTable[40][settingsData.language]
+#define OPT_FEED_START langTable[41][settingsData.language]
+#define OPT_FEED_END langTable[42][settingsData.language]
 
 #endif

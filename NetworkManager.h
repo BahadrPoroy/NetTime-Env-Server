@@ -158,6 +158,8 @@ public:
         settings.feederEnd = data.intValue;
       if (settingsJson.get(data, "dayBright"))
         settings.dayBright = data.intValue;
+      if (settingsJson.get(data, "manBright"))
+        settings.manBright = data.intValue;
       if (settingsJson.get(data, "nightBright"))
         settings.nightBright = data.intValue;
       if (settingsJson.get(data, "isAdaptive"))

@@ -1,6 +1,7 @@
 #include <TFT_eSPI.h>
 #include <dht11.h>
 #include <SD.h>
+#include "themes.h"
 #include "config.h"
 #include "structs.h"
 
@@ -20,6 +21,7 @@ TouchManager touchBox;
 NetworkManager netBox;
 TimeManager timeBox;
 
+const Theme* currentTheme = &TurquoiseTheme;
 
 unsigned long lastClockUpdate = 0;
 unsigned long lastSensorUpdate = 0;
@@ -86,7 +88,9 @@ void loop() {
 
     switch (currentPage) {
       case HOME_PAGE:
-        displayBox.updateHome(tft, feederStatus, isFed, timeBox.getFormattedTime(), currentTemp, netBox.currentWeather);
+        if (!displayBox.isClockExpanded && !displayBox.isMenuOpen) {
+          displayBox.updateHome(tft, feederStatus, isFed, timeBox.getFormattedTime(), currentTemp, netBox.currentWeather);
+        }
         break;
 
       case WEATHER_PAGE:
@@ -193,11 +197,11 @@ void handleInput() {
     if (x > 5 && x < 100 && y > 155 && y < 177) {
       switchPage(SYSTEM_PAGE);
     } else if (x > 4 && x < 100 && y > 180 && y < 202) {
-      tft.fillRect(0, 0, 320, 240, 0x0063);
+      tft.fillRect(0, 0, 320, 240, BG_COLOR_ALT);
       tft.unloadFont();
       tft.loadFont(ATR28);
       tft.setTextDatum(MC_DATUM);
-      tft.setTextColor(TFT_WHITE);
+      tft.setTextColor(LBL_COLOR_ALT);
       String text = String(SYS_REBOOTING);
       int newLinePos = text.indexOf('\n');
       if (newLinePos != -1) {
@@ -223,7 +227,7 @@ void handleInput() {
         switchPage(WEATHER_PAGE);
       else if (x > 245 && x < 315)
         switchPage(FEEDER_PAGE);
-    } else if (y > 130 && y < 220) {
+    } else if (y > 130 && y < 205) {
       if (x > 10 && x < 75) {
         switchPage(SETTINGS_PAGE);
       }
@@ -291,34 +295,34 @@ void switchPage(Page targetPage) {
       break;
     case WEATHER_PAGE:
       displayBox.lastIcon = "";
-      displayBox.drawHeader(tft, WEATHER_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, WEATHER_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawWeatherPage(tft);
       break;
 
     case SYSTEM_PAGE:
-      displayBox.drawHeader(tft, SYSTEM_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, SYSTEM_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawSystemPage(tft);
       break;
 
     case HOME_PAGE:
-      displayBox.drawHeader(tft, HOME_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, HOME_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawHomePage(tft);
       break;
 
     case FEEDER_PAGE:
-      displayBox.drawHeader(tft, FEEDER_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, FEEDER_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawFeederPage(tft);
       break;
 
     case SETTINGS_PAGE:
-      displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawSettingsPage(tft, settingsData);
       break;
     case LANGUAGE_SETTINGS:
-      displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       break;
     case DISPLAY_SETTINGS:
-      displayBox.drawHeader(tft, SETTINGS_TITLE, 0x0063, 0xFFFF);
+      displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawDisplaySettingsPage(tft, settingsData);
       break;
     default:
