@@ -6,10 +6,12 @@
 #include <SD.h>
 #include <LittleFS.h>
 #include <ESP8266WiFi.h>  // Required to use the WiFi object inside this class
+#include "config.h"
 #include "language.h"
 #include "Fonts/myFonts.h"
+#include "TimeManager.h"
 
-#define VERSION "NetTime OS v2.8.0 (2026)"
+#define VERSION "NetTime OS v2.8.4-pre-alpha (2026)"
 
 // Definition of icon height & width values
 #define ICON_W 32
@@ -46,6 +48,8 @@ public:
      * @param x X coordinate for the top-left corner.
      * @param y Y coordinate for the top-left corner.
      */
+
+  TimeManager timeBox;
   String lastIcon = "";
 
   void init(TFT_eSPI &tft) {
@@ -858,6 +862,9 @@ public:
 
   //--- DISPLAY SETTINGS PAGE ---
   void drawDisplaySettingsPage(TFT_eSPI &tft, SettingsData &settings) {
+    tft.fillRect(0, 80, 320, 80, BG_COLOR);
+    int rowY = 80;
+    int btnS = 20;
     tft.loadFont(ATR20);
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(LBL_COLOR, BG_COLOR);
@@ -873,51 +880,10 @@ public:
     // 3. Dynamic Area (Depends on Adaptive Brightness)
     if (settings.isAdaptive) {
       // IF ADAPTIVE IS ON
+      tft.setTextColor(LBL_COLOR, BG_COLOR);
+      tft.setTextDatum(TL_DATUM);
       tft.setTextPadding(tft.textWidth(OPT_DAY_BRIGHT));
       tft.drawString(String(OPT_DAY_BRIGHT), 10, 80);
-      tft.drawString(String(settings.dayBright), 310 - tft.textWidth("255"), 80);
-      tft.setTextPadding(tft.textWidth(OPT_NIGHT_BRIGHT));
-      tft.drawString(String(OPT_NIGHT_BRIGHT), 10, 120);
-      tft.drawString(String(settings.nightBright), 310 - tft.textWidth("255"), 120);
-    } else {
-      // IF ADAPTIVE IS OFF
-      tft.setTextColor(LBL_COLOR, BG_COLOR);
-      tft.setTextPadding(tft.textWidth(OPT_MAN_BRIGHT));
-      tft.drawString(String(OPT_MAN_BRIGHT), 10, 80);
-
-      tft.fillRoundRect(190, 80, 20, 20, 4, ACTIVE_COLOR);
-      tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
-      tft.setTextPadding(tft.textWidth("-"));
-      tft.drawCentreString("-", 190 + (20 / 2), rowY, 2);
-
-      tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
-      tft.fillRoundRect(210, 80, 70, 20, 4, BG_COLOR_ALT);
-      tft.setTextDatum(TC_DATUM);
-      tft.drawString(String(settings.manBright), 245, 80);
-
-      tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
-      tft.fillRoundRect(280, 80, 20, 20, 4, ACTIVE_COLOR);
-      tft.setTextPadding(tft.textWidth("+"));
-      tft.drawCentreString("+", 280 + (20 / 2), rowY, 2);
-    }
-    tft.unloadFont();
-    tft.setTextPadding(0);
-  }
-
-  // --- SUB BRIGHTNESS SETTINGS ---
-  void drawBrightnessSubSettings(TFT_eSPI &tft, SettingsData &settings) {
-    int rowY = 80;
-    int btnS = 20;  // Button Size
-    // 1. Alt alanı temizle (Sadece etkilenen bölge)
-    tft.fillRect(0, 80, 320, 80, BG_COLOR);
-    tft.loadFont(ATR20);
-    tft.setTextDatum(TL_DATUM);
-    if (!settings.isAdaptive) {
-      // --- MANUEL MOD GÖRÜNÜMÜ ---
-      // Başlık (Siyah üzerine Aktif Renk)
-      tft.setTextColor(LBL_COLOR, BG_COLOR);
-      tft.setTextPadding(tft.textWidth(OPT_MAN_BRIGHT));
-      tft.drawString(String(OPT_MAN_BRIGHT), 10, 80);
 
       tft.fillRoundRect(190, rowY, btnS, btnS, 4, ACTIVE_COLOR);
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
@@ -927,28 +893,115 @@ public:
       tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
       tft.fillRoundRect(210, rowY, 70, btnS, 4, BG_COLOR_ALT);
       tft.setTextDatum(TC_DATUM);
-      tft.drawString(String(settings.manBright), 245, 80);
+      tft.setTextPadding(tft.textWidth(String(settings.dayBright)));
+      tft.drawString(String(settings.dayBright), 245, 80);
 
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
       tft.fillRoundRect(280, rowY, btnS, btnS, 4, ACTIVE_COLOR);
+      tft.setTextDatum(TL_DATUM);
       tft.setTextPadding(tft.textWidth("+"));
       tft.drawCentreString("+", 280 + (btnS / 2), rowY, 2);
-    } else {
-      // --- ADAPTİF MOD GÖRÜNÜMÜ ---
-      // Gündüz Ayarı (Aktif)
-      tft.setTextColor(LBL_COLOR, BG_COLOR);
-      tft.setTextPadding(tft.textWidth(OPT_DAY_BRIGHT));
-      tft.drawString(String(OPT_DAY_BRIGHT), 10, 80);
-      tft.drawString(String(settings.dayBright), 310 - tft.textWidth("255"), 80);
-      //drawStyledBar(tft, 220, 130, settingsData.dayBright, ACTIVE_COLOR, true);  // true = küçük bar
 
-      // Gece Ayarı (Daha loş/pasif görünebilir veya ikisi de aktif kalabilir)
+      tft.setTextColor(LBL_COLOR, BG_COLOR);
       tft.setTextPadding(tft.textWidth(OPT_NIGHT_BRIGHT));
       tft.drawString(String(OPT_NIGHT_BRIGHT), 10, 120);
-      tft.drawString(String(settings.nightBright), 310 - tft.textWidth("255"), 120);
-      //drawStyledBar(tft, 220, 180, settingsData.nightBright, ACTIVE_COLOR, true);
+
+      tft.fillRoundRect(190, rowY + 40, btnS, btnS, 4, ACTIVE_COLOR);
+      tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.setTextPadding(tft.textWidth("-"));
+      tft.drawCentreString("-", 190 + (btnS / 2), rowY + 40, 2);
+
+      tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+      tft.fillRoundRect(210, rowY + 40, 70, btnS, 4, BG_COLOR_ALT);
+      tft.setTextDatum(TC_DATUM);
+      tft.setTextPadding(tft.textWidth(String(settings.nightBright)));
+      tft.drawString(String(settings.nightBright), 245, 120);
+
+      tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.setTextDatum(TL_DATUM);
+      tft.fillRoundRect(280, rowY + 40, btnS, btnS, 4, ACTIVE_COLOR);
+      tft.setTextPadding(tft.textWidth("+"));
+      tft.drawCentreString("+", 280 + (btnS / 2), rowY + 40, 2);
+    } else {
+      // IF ADAPTIVE IS OFF
+      tft.setTextColor(LBL_COLOR, BG_COLOR);
+      tft.setTextDatum(TL_DATUM);
+      tft.setTextPadding(tft.textWidth(OPT_MAN_BRIGHT));
+      tft.drawString(String(OPT_MAN_BRIGHT), 10, 80);
+
+      tft.fillRoundRect(190, 80, 20, 20, 4, ACTIVE_COLOR);
+      tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.setTextPadding(tft.textWidth("-"));
+      tft.drawCentreString("-", 190 + (20 / 2), 80, 2);
+
+      tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+      tft.fillRoundRect(210, 80, 70, 20, 4, BG_COLOR_ALT);
+      tft.setTextDatum(TC_DATUM);
+      tft.drawString(String(settings.manBright), 245, 80);
+
+      tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.fillRoundRect(280, 80, 20, 20, 4, ACTIVE_COLOR);
+      tft.setTextDatum(TL_DATUM);
+      tft.setTextPadding(tft.textWidth("+"));
+      tft.drawCentreString("+", 280 + (20 / 2), 80, 2);
     }
     tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+
+  void updateBrightnessSettings(TFT_eSPI &tft, SettingsData &settings) {
+    int rowY = 80;
+    int btnS = 20;
+    tft.loadFont(ATR20);
+    if (!settings.isAdaptive) {
+      tft.fillRect(210, 80, 70, 20, BG_COLOR_ALT);
+      tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+      tft.fillRoundRect(210, rowY, 70, btnS, 4, BG_COLOR_ALT);
+      tft.setTextDatum(TC_DATUM);
+      tft.setTextPadding(tft.textWidth(String(settings.manBright)));
+      tft.drawString(String(settings.manBright), 245, 80);
+    } else {
+      tft.fillRect(210, 80, 70, 20, BG_COLOR_ALT);
+      tft.fillRect(210, 120, 70, 20, BG_COLOR_ALT);
+      tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+      tft.fillRoundRect(210, rowY, 70, btnS, 4, BG_COLOR_ALT);
+      tft.setTextDatum(TC_DATUM);
+      tft.setTextPadding(tft.textWidth(String(settings.dayBright)));
+      tft.drawString(String(settings.dayBright), 245, 80);
+
+      tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+      tft.fillRoundRect(210, rowY + 40, 70, btnS, 4, BG_COLOR_ALT);
+      tft.setTextDatum(TC_DATUM);
+      tft.setTextPadding(tft.textWidth(String(settings.nightBright)));
+      tft.drawString(String(settings.nightBright), 245, 120);
+    }
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+
+  void handleAutoBrightness(const WeatherData &weather, const SettingsData &settings, bool isNow = false) {
+
+    if (!settings.isAdaptive) return;
+
+
+    static unsigned long lastCheck = 0;
+    if (millis() - lastCheck < 60000 && !isNow) return;
+    lastCheck = millis();
+
+    unsigned long now = timeBox.getTimestamp();
+
+
+    bool itIsDaytime = (now >= weather.sunrise && now < weather.sunset);
+    static bool lastDayState = !itIsDaytime;
+
+    if (itIsDaytime != lastDayState || isNow) {
+      if (itIsDaytime) {
+        analogWrite(TFT_LED, map(settings.dayBright, 0, 100, 0, MAX_PWM));
+      } else {
+        analogWrite(TFT_LED, map(settings.nightBright, 0, 100, 0, MAX_PWM));
+      }
+      lastDayState = itIsDaytime;
+    }
   }
 };
 #endif

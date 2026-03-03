@@ -31,15 +31,18 @@
 //Definition of Pages
 enum Page {
   NONE,
-  HOME_PAGE,     // Main dashboard
-  DESKTOP_PAGE,  // Desktop for Page Icons
-  WEATHER_PAGE,  // Weather Sensors
-  SYSTEM_PAGE,   // System Properties and device info
-  FEEDER_PAGE,   // Feeding System Controls
+  HOME_PAGE,      // Main dashboard
+  DESKTOP_PAGE,   // Desktop for Page Icons
+  WEATHER_PAGE,   // Weather Sensors
+  SYSTEM_PAGE,    // System Properties and device info
+  FEEDER_PAGE,    // Feeding System Controls
   SETTINGS_PAGE,  // Settings Page for future updates
   // Sub Pages of Settings Page
   LANGUAGE_SETTINGS,
-  DISPLAY_SETTINGS
+  DISPLAY_SETTINGS,
+  FEEDER_SETTINGS
 };
+
+static constexpr int MAX_PWM = 4095; //Maximum PWM value used
 
 #endif

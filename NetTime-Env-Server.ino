@@ -43,6 +43,8 @@ uint16_t feederAlarmColor;
 
 void setup() {
   Serial.begin(115200);
+  analogWriteRange(MAX_PWM);
+  analogWriteFreq(1000);
   pinMode(TFT_LED, OUTPUT);
   digitalWrite(TFT_LED, HIGH);
 
@@ -65,6 +67,7 @@ void setup() {
   netBox.readSettings(settingsData);
   feederAlarmColor = isFed ? TFT_YELLOW : TFT_RED;
   displayBox.drawTaskbar(tft);
+  displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
   switchPage(DESKTOP_PAGE);
 }
 
@@ -72,6 +75,7 @@ void loop() {
   netBox.handleOTA();
   netBox.handleFeederNetwork(feederStatus, isFed, lastFedTime, timeBox.getTimestamp());
   netBox.handleOpenWeather();
+  displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
 
   // Unified UI and Sensor Update (Every 1 second)
   if (millis() - lastUIUpdate >= 1000) {
@@ -232,6 +236,13 @@ void handleInput() {
         switchPage(SETTINGS_PAGE);
       }
     }
+  } else if (currentPage == FEEDER_PAGE) {
+    if (x > 290 && y < 30) {
+      switchPage(DESKTOP_PAGE);
+    }
+    if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
+      netBox.broadcastUDP("FEED_NOW");
+    }
   } else if (currentPage == SETTINGS_PAGE) {
     if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
@@ -242,30 +253,84 @@ void handleInput() {
       else if (x > 85 && x < 155)
         switchPage(DISPLAY_SETTINGS);
     }
-  } else if (currentPage == DISPLAY_SETTINGS || currentPage == LANGUAGE_SETTINGS) {
+  } else if (currentPage == FEEDER_SETTINGS || currentPage == LANGUAGE_SETTINGS) {
     if (x > 290 && y < 30) {
       switchPage(SETTINGS_PAGE);
     }
-    if (currentPage == DISPLAY_SETTINGS) {
-      if (y > 32 & y < 65) {
-        if (x > 215 & x < 275) {
-          settingsData.isAdaptive = !settingsData.isAdaptive;
-          displayBox.drawToggleButton(tft, 220, 35, settingsData.isAdaptive);
-          displayBox.drawBrightnessSubSettings(tft, settingsData);
-          netBox.updateSetting("isAdaptive", settingsData.isAdaptive);
+  } else if (currentPage == DISPLAY_SETTINGS) {
+    int value;
+    if (x > 290 && y < 30) {
+      switchPage(SETTINGS_PAGE);
+    }
+    if (y > 32 & y < 65) {
+      if (x > 215 & x < 275) {
+        settingsData.isAdaptive = !settingsData.isAdaptive;
+        displayBox.drawDisplaySettingsPage(tft, settingsData);
+        netBox.updateSetting("isAdaptive", settingsData.isAdaptive);
+        if (!settingsData.isAdaptive) {
+          analogWrite(TFT_LED, map(settingsData.manBright, 0, 100, 0, MAX_PWM));
+        } else {
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData, true);
         }
       }
-    } else if (currentPage == LANGUAGE_SETTINGS) {
-      if (x > 290 && y < 30) {
-        switchPage(SETTINGS_PAGE);
+    }
+    if (settingsData.isAdaptive) {
+      if (y > 75 && y < 105) {
+        if (x > 185 && x < 215) {
+          settingsData.dayBright -= 2;
+          if (settingsData.dayBright < 10)
+            settingsData.dayBright = 10;
+          displayBox.updateBrightnessSettings(tft, settingsData);
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
+          netBox.updateSetting("dayBright", settingsData.dayBright);
+        }
+        if (x > 275 && x < 305) {
+          settingsData.dayBright += 2;
+          if (settingsData.dayBright > 100)
+            settingsData.dayBright = 100;
+          displayBox.updateBrightnessSettings(tft, settingsData);
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
+          netBox.updateSetting("dayBright", settingsData.dayBright);
+        }
+      } else if (y > 115 && y < 145) {
+        if (x > 185 && x < 215) {
+          settingsData.nightBright -= 2;
+          if (settingsData.nightBright < 10)
+            settingsData.nightBright = 10;
+          displayBox.updateBrightnessSettings(tft, settingsData);
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
+          netBox.updateSetting("nightBright", settingsData.nightBright);
+        }
+        if (x > 275 && x < 305) {
+          settingsData.nightBright += 2;
+          if (settingsData.nightBright > 100)
+            settingsData.nightBright = 100;
+          displayBox.updateBrightnessSettings(tft, settingsData);
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
+          netBox.updateSetting("nightBright", settingsData.nightBright);
+        }
       }
-    }
-  } else if (currentPage == FEEDER_PAGE) {
-    if (x > 290 && y < 30) {
-      switchPage(DESKTOP_PAGE);
-    }
-    if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
-      netBox.broadcastUDP("FEED_NOW");
+    } else {
+      if (y > 75 && y < 105) {
+        if (x > 185 && x < 215) {
+          settingsData.manBright -= 2;
+          if (settingsData.manBright < 10)
+            settingsData.manBright = 10;
+          displayBox.updateBrightnessSettings(tft, settingsData);
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
+          analogWrite(TFT_LED, map(settingsData.manBright, 0, 100, 0, MAX_PWM));
+          netBox.updateSetting("manBright", settingsData.manBright);
+        }
+        if (x > 275 && x < 305) {
+          settingsData.manBright += 2;
+          if (settingsData.manBright > 100)
+            settingsData.manBright = 100;
+          displayBox.updateBrightnessSettings(tft, settingsData);
+          displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
+          analogWrite(TFT_LED, map(settingsData.manBright, 0, 100, 0, MAX_PWM));
+          netBox.updateSetting("manBright", settingsData.manBright);
+        }
+      }
     }
   } else {
     if (x > 290 && y < 30) {

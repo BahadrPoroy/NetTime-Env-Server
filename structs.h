@@ -8,6 +8,8 @@ struct WeatherData {
   int humidity;
   String icon;
   String description;
+  unsigned long sunrise;  // Unix timestamp
+  unsigned long sunset;   // Unix timestamp
   bool updated = false;
 };
 

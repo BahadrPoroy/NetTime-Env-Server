@@ -24,7 +24,7 @@ const Theme TurquoiseTheme = {
 
 extern const Theme* currentTheme;
 
-// İsimle çağırmak için kolay tanımlamalar
+// Macros (For easy calling by names)
 #define ACTIVE_COLOR (currentTheme->active_color)
 #define PASSIVE_COLOR (currentTheme->passive_color)
 #define BG_COLOR (currentTheme->bg_color)
