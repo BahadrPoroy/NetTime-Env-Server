@@ -1,5 +1,5 @@
 /*
- * Master Server V2.0.0-beta Config
+ * Master Server V2.8.5-pre-alpha Config
  * Branch: feature/tft-upgrade-v2
  */
 #undef TFT_CS
@@ -43,6 +43,14 @@ enum Page {
   FEEDER_SETTINGS
 };
 
+enum Language{
+  ENGLISH,
+  TURKCE
+};
+
 static constexpr int MAX_PWM = 4095; //Maximum PWM value used
+
+static constexpr int SCREEN_WIDTH = 320;
+static constexpr int SCREEN_HEIGHT = 240;
 
 #endif

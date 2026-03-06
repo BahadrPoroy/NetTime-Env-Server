@@ -1,11 +1,11 @@
-# 🕒 NetTime-Env-Server v2.7.0 🌐
+# 🕒 NetTime-Env-Server v2.8.5-pre-alpha 🌐
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
 ![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 ## "The NetTime OS - Premium TFT Edition"
 
-<!-- ## ⚠️ Note: This version is currently in Beta. -->
+## ⚠️ Note: This version is currently in PRE-ALPHA. 
 
 <!-- - **Known Issues: Minor UI rendering artifacts (pixel padding or icon ghosting) may occur during rapid screen transitions or specific weather conditions.** -->
 
@@ -25,27 +25,34 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.7.0
+## 🚀 What's New in v2.8.5
 
-- **Status:** Stable for daily use.
+- **Status:** ⚠️ Unstable for daily use. ⚠️
 
 <!-- ### 🌦 Weather Forecast Integration ###
   - **TFT Forecast UI:** Real-time weather data from OpenWeather API is now displayed on the TFT screen.
   - **Dynamic Icons:** Added support for high-quality BMP weather icons stored on the SD card.  
 -->
-
+<!--
 ### 🐟 Feeder System & Power Recovery
 - **Anti-Spam Logic (v2.6.1):** Implemented a 180-second cooldown between feeding commands to prevent redundant triggers caused by network latency.
 - **Enhanced Reliability:** Fixed a critical bug in the power loss recovery algorithm.
 - **Smart Fail-Safe:** The system now defaults to `isFed = true` during database read failures to prevent accidental overfeeding.
 - **Initialization Reordering:** Optimized the `begin` sequence of system modules (`netBox`, `timeBox`, `displayBox`) to ensure network stability before Firebase operations.
 - **Stability:** Added `yield()` calls to prevent watchdog resets during intensive network handshakes.
+-->
 
 ### 📊 Display & UI Improvements
-- **Home Page has been activated:** Home page is now active with base data showcase, There are 3 segments `tempeture (indoor & outdoor)`,`time`and `feeder status`. It provides seing more information on one page.
-- **Icon Update:** Home icon is enchanced with a modern one
-- **Layout Refactoring:** Added home page button and refactored layout of the desktop page icons.
-  
+<!-- - **Settings Page has been activated:** Home page is now active with base data showcase, There are 3 segments `tempeture (indoor & outdoor)`,`time`and `feeder status`. It provides seing more information on one page. -->
+- **Page icons added for language and display settings under the settings page**
+- **The icons are at `/Assets/Page_Icons/` path**
+- **Language settings have been activated only visually for now. (`UI would be changed on development`)**
+- **`languages` named array is added on `languages.h` file for easy matching the language name from settings**
+  - **on `language setting page`, language names come from that array by row index**
+- **`SCREEN_WIDTH` and `SCREEN_HEIGHT` constants are added on `config.h` file**
+<!-- - **Icon Update:** Home icon is enchanced with a modern one -->
+<!-- - **Layout Refactoring:** Added home page button and refactored layout of the desktop page icons. -->
+
 ### 📂 Folder & File Structure Improvements
 - **Homepage Icons Moved:** In `Assets` folder, a new folder has been created called as `Page_Icons` and all of the desktop icons has been moved in this folder for creating a tidier project structure.
 
@@ -54,7 +61,7 @@ While the original project was a standalone clock, this version transforms the d
 ## 🚧 Roadmap & Work in Progress ## 
   The Settings icon currently serves as placeholders for upcoming modules.
   - ### Future Plan About Settings Page ###
-    - **Adding a slider for adjusting the screen brightness**
+    - **~~Adding a slider for adjusting the screen brightness~~ It's done**
     - **Language option for changing the language on runtime**
     - **Adjusting feeding times on settings**
     - **Theme/color change section**
@@ -71,7 +78,10 @@ NetTime-Env-Server
 ├── NetworkManager.h  # Firebase, WiFi, UDP & OTA Updates
 ├── TimeManager.h     # NTP Sync & Time Formatting
 ├── TouchManager.h    # Touch Input Mapping & Calibration
-└── myFonts.h         # Centralized Font Management
+├── myFonts.h         # Centralized Font Management
+└── Assets            # Includes fonts, icons and project's showcases
+    ├── Page_Icons    # Includes page icons used on desktop and settings pages
+    └── Weather_Icons # Includes weather forecast icons got from openWeather
 ```
 
 ## 🛠️ Hardware Requirements

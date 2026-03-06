@@ -53,6 +53,8 @@ const char* const dayNames[7][2] = {
   { "Sunday", "Pazar" }, { "Monday", "Pazartesi" }, { "Tuesday", "Salı" }, { "Wednesday", "Çarşamba" }, { "Thursday", "Perşembe" }, { "Friday", "Cuma" }, { "Saturday", "Cumartesi" }
 };
 
+const char* const languages[] = {"English" , "Türkçe"};
+
 // --- 3. Macros (For easy calling by names) ---
 // Old names are compatible with new table provide of these macros
 // settingsData.language, EN = 0, TR = 1 for now.

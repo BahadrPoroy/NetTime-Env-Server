@@ -41,6 +41,9 @@ String lastDayChecked;
 bool isFeederAlarmActive = true;
 uint16_t feederAlarmColor;
 
+//Page Counter for Sub-Pages
+int pageNo;
+
 void setup() {
   Serial.begin(115200);
   analogWriteRange(MAX_PWM);
@@ -385,6 +388,7 @@ void switchPage(Page targetPage) {
       break;
     case LANGUAGE_SETTINGS:
       displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
+      pageNo = displayBox.drawLanguagePage(tft, settingsData);
       break;
     case DISPLAY_SETTINGS:
       displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);

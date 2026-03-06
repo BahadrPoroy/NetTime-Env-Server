@@ -11,7 +11,7 @@
 #include "Fonts/myFonts.h"
 #include "TimeManager.h"
 
-#define VERSION "NetTime OS v2.8.4-pre-alpha (2026)"
+#define VERSION "NetTime OS v2.8.5-pre-alpha (2026)"
 
 // Definition of icon height & width values
 #define ICON_W 32
@@ -845,12 +845,12 @@ public:
     //---------------
 
     //Language
-    //drawMonoIcon(tft, "/Page_Icons/language.bmp", startX - 16, startY, ICON_W, ICON_H, LBL_COLOR);
+    drawMonoIcon(tft, "/Page_Icons/language.bmp", startX - 16, startY, ICON_W, ICON_H, LBL_COLOR);
     tft.setTextPadding(tft.textWidth(OPT_LANGUAGE));
     tft.drawString(String(OPT_LANGUAGE), startX, startY + nameSpacing);
 
     // Screen
-    //drawMonoIcon(tft, "/Page_Icons/display.bmp", (startX + spacingX) - 16, startY, ICON_W, ICON_H, LBL_COLOR);
+    drawMonoIcon(tft, "/Page_Icons/display.bmp", (startX + spacingX) - 16, startY, ICON_W, ICON_H, LBL_COLOR);
     tft.setTextPadding(tft.textWidth(OPT_DISPLAY));
     tft.drawString(String(OPT_DISPLAY), startX + spacingX, startY + nameSpacing);
 
@@ -858,6 +858,42 @@ public:
     drawMonoIcon(tft, "/Page_Icons/feeder.bmp", (startX + 2 * spacingX) - 16, startY, ICON_W, ICON_H, LBL_COLOR);
     tft.setTextPadding(tft.textWidth(OPT_FEEDER));
     tft.drawString(String(OPT_FEEDER), startX + 2 * spacingX, startY + nameSpacing);
+  }
+
+  // LANGUAGE SETTINGS
+  int drawLanguagePage(TFT_eSPI &tft, SettingsData &settings, int page = 0) {
+    int rowHeight = 30;
+    int startY = 35;
+    int midX = 160;
+    int maxRows = 6;
+    int topIndex = page * maxRows;
+    int lastIndex = (sizeof(languages) / sizeof(languages[0]) - 1);
+    int activeIndex = settings.language;
+    tft.loadFont(ATR24);
+    tft.setTextDatum(MC_DATUM);
+    for (int row = 0; row < maxRows; row++) {
+      int boxY = startY + (row * rowHeight);
+      int textY = boxY + (rowHeight / 2);
+
+      if (row <= lastIndex) {
+        if (row == activeIndex) {
+          tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+          tft.fillRect(0, boxY, SCREEN_WIDTH, rowHeight, ACTIVE_COLOR);
+          tft.drawRect(0, boxY, SCREEN_WIDTH, rowHeight, PASSIVE_COLOR);
+          tft.setTextPadding(tft.textWidth(languages[topIndex + row]));
+          tft.drawString(String(languages[topIndex + row]), midX, textY);
+        } else {
+          tft.setTextColor(LBL_COLOR, PASSIVE_COLOR);
+          tft.fillRect(0, boxY, SCREEN_WIDTH, rowHeight, PASSIVE_COLOR);
+          tft.drawRect(0, boxY, SCREEN_WIDTH, rowHeight, ACTIVE_COLOR);
+          tft.setTextPadding(tft.textWidth(languages[topIndex + row]));
+          tft.drawString(String(languages[topIndex + row]), midX, textY);
+        }
+      }
+    }
+    tft.unloadFont();
+    tft.setTextPadding(0);
+    return page;
   }
 
   //--- DISPLAY SETTINGS PAGE ---
