@@ -4,9 +4,9 @@
 // language selection is reading from database: 0 = English, 1 = Turkish
 const char* const langTable[][2] = {
   { "TEMPERATURE", "SICAKLIK" },                                                // 0
-  { "Temperature", "Sıcaklık" },                                                // 1
+  { "Temp", "Sıcaklık" },                                                       // 1
   { "HUMIDITY", "NEM" },                                                        // 2
-  { "Humidity", "Nem" },                                                        // 3
+  { "Hum", "Nem" },                                                             // 3
   { "Date", "Tarih" },                                                          // 4
   { "Time", "Saat" },                                                           // 5
   { "WEATHER", "HAVA DURUMU" },                                                 // 6
@@ -35,17 +35,17 @@ const char* const langTable[][2] = {
   { "FEEDER SYSTEM", "YEMLEME SİSTEMİ" },                                       // 29
   { "INDOOR", "ODA HAVASI" },                                                   // 30
   { "OUTDOOR", "DIŞ HAVA DURUMU" },                                             // 31
-  { "INDOOR TEMP", "İÇ" },                                                      // 32
-  { "OUTDOOR TEMP", "DIŞ" },                                                    // 33
+  { "IN", "İÇ" },                                                           // 32
+  { "OUT", "DIŞ" },                                                         // 33
   { "Updating...", "Güncelleniyor..." },                                        // 34
-  { "Language", "Dil" },                                                        //35
-  { "Display", "Ekran" },                                                       //36
-  { "Adaptive Brightness", "Adaptif Parlaklık" },                               //37
-  { "Brightness", "Parlaklık" },                                                //38
-  { "Day Brightness", "Gündüz Parlaklığı" },                                    //39
-  { "Night Brightness", "Gece Parlaklığı" },                                    //40
-  { "Feeder Start", "Yemleme Başlangıcı" },                                     //41
-  { "Feeder End", "Yemleme Bitişi" }                                            //42
+  { "Language", "Dil" },                                                        // 35
+  { "Display", "Ekran" },                                                       // 36
+  { "Adaptive Brightness", "Adaptif Parlaklık" },                               // 37
+  { "Brightness", "Parlaklık" },                                                // 38
+  { "Day Brightness", "Gündüz Parlaklığı" },                                    // 39
+  { "Night Brightness", "Gece Parlaklığı" },                                    // 40
+  { "Feeder Start", "Yemleme Başlangıcı" },                                     // 41
+  { "Feeder End", "Yemleme Bitişi" }                                            // 42
 };
 
 // --- 2. Week day names ---
@@ -53,7 +53,7 @@ const char* const dayNames[7][2] = {
   { "Sunday", "Pazar" }, { "Monday", "Pazartesi" }, { "Tuesday", "Salı" }, { "Wednesday", "Çarşamba" }, { "Thursday", "Perşembe" }, { "Friday", "Cuma" }, { "Saturday", "Cumartesi" }
 };
 
-const char* const languages[] = {"English" , "Türkçe"};
+const char* const languages[] = { "English", "Türkçe" };
 
 // --- 3. Macros (For easy calling by names) ---
 // Old names are compatible with new table provide of these macros

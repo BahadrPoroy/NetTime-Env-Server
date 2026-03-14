@@ -11,7 +11,7 @@
 #include "Fonts/myFonts.h"
 #include "TimeManager.h"
 
-#define VERSION "NetTime OS v2.8.5-pre-alpha (2026)"
+#define VERSION "NetTime OS v2.8.6-pre-alpha (2026)"
 
 
 
