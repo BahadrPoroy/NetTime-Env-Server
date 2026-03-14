@@ -49,7 +49,7 @@ void setup() {
   analogWriteRange(MAX_PWM);
   analogWriteFreq(1000);
   pinMode(TFT_LED, OUTPUT);
-  digitalWrite(TFT_LED, HIGH);
+  analogWrite(TFT_LED, 0);
 
   if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
     Serial.println("SD Card Error!");
@@ -59,7 +59,7 @@ void setup() {
 
   // Show logo immediately
   displayBox.drawStaticSplash(tft);
-
+  displayBox.updateLoadingAnimation(tft);
   // Connect WiFi while animating
   netBox.begin(tft, displayBox);
   timeBox.begin();
@@ -224,6 +224,7 @@ void handleInput() {
     }
   }
   // --- Page Specific Logic ---
+  // --- DESKTOP_PAGE Start---
   if (currentPage == DESKTOP_PAGE) {
     if (y > 30 && y < 120) {
       if (x > 10 && x < 75)
@@ -239,14 +240,16 @@ void handleInput() {
         switchPage(SETTINGS_PAGE);
       }
     }
-  } else if (currentPage == FEEDER_PAGE) {
+  }  // --- DESKTOP_PAGE End / FEEDER_PAGE Start ---
+  else if (currentPage == FEEDER_PAGE) {
     if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
     }
     if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
       netBox.broadcastUDP("FEED_NOW");
     }
-  } else if (currentPage == SETTINGS_PAGE) {
+  }  // --- FEEDER_PAGE End / SETTINGS_PAGE Start ---
+  else if (currentPage == SETTINGS_PAGE) {
     if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
     }
@@ -255,12 +258,34 @@ void handleInput() {
         switchPage(LANGUAGE_SETTINGS);
       else if (x > 85 && x < 155)
         switchPage(DISPLAY_SETTINGS);
+      //else if (x > 165 && x < 235)
+      //switchPage(FEEDER_SETTINGS);
     }
-  } else if (currentPage == FEEDER_SETTINGS || currentPage == LANGUAGE_SETTINGS) {
+  }  // --- SETTINGS_PAGE End / LANGUAGE_SETTINGS Start ---
+  else if (currentPage == LANGUAGE_SETTINGS) {
     if (x > 290 && y < 30) {
       switchPage(SETTINGS_PAGE);
     }
-  } else if (currentPage == DISPLAY_SETTINGS) {
+    if (x > 10 && x < SCREEN_WIDTH - 40) {
+      int rowHeight = 30;
+      int startY = HEADER_HEIGHT + 5;
+      int maxRows = 6;
+      int topIndex = pageNo * maxRows;
+      int lastIndex = (sizeof(languages) / sizeof(languages[0]) - 1);
+      for (int row = 0; row < maxRows; row++) {
+        int rowY = startY + (row * rowHeight);
+        if (row <= lastIndex) {
+          if (y >= rowY && y <= rowHeight + rowY) {
+            settingsData.language = topIndex + row;
+            netBox.updateSetting("language", topIndex + row);
+            displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
+            displayBox.updateLanguagePage(tft, settingsData, pageNo);
+          }
+        }
+      }
+    }
+  }  // --- LANGUAGE_SETTINGS End / DISPLAY_SETTINGS Start ---
+  else if (currentPage == DISPLAY_SETTINGS) {
     int value;
     if (x > 290 && y < 30) {
       switchPage(SETTINGS_PAGE);
@@ -335,7 +360,13 @@ void handleInput() {
         }
       }
     }
-  } else {
+  }  // --- DISPLAY_SETTINGS End / FEEDER_SETTINGS Start ---
+  else if (currentPage == FEEDER_SETTINGS) {
+    if (x > 290 && y < 30) {
+      switchPage(SETTINGS_PAGE);
+    }
+  }  // --- FEEDER_SETTINGS End ---
+  else {
     if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
     }

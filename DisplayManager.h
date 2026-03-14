@@ -13,11 +13,7 @@
 
 #define VERSION "NetTime OS v2.8.5-pre-alpha (2026)"
 
-// Definition of icon height & width values
-#define ICON_W 32
-#define ICON_H 32
-#define TRAY_ICON_H 16
-#define TRAY_ICON_W 16
+
 
 // --- System Tray Configuration ---
 #define MAX_TRAY_ICONS 3  // Maximum number of visible icons before grouping
@@ -147,23 +143,16 @@ public:
     drawSDImage(tft, "/logo.bmp", 0, 0, 320, 240);
   }
 
-  int scanX = 85;
-  bool direction = true;
+  int brightness = 0;
 
   void updateLoadingAnimation(TFT_eSPI &tft) {
-    // Run animation frame every 40ms without using delay()
-    if (millis() - lastAnimMillis >= 40) {
-      // Erase previous position
-      int startPoint = 85;
-      int endPoint = 235;
+    // Run animation frame every 2ms without using delay()
+    if (millis() - lastAnimMillis >= 5) {  
+      if (brightness <= MAX_PWM) {
+        analogWrite(TFT_LED, brightness);
 
-      tft.drawFastHLine(scanX, 220, 20, 0x0000);
-
-      if (direction) scanX += 2;
-      else scanX -= 2;
-      if (scanX > endPoint - 20 || scanX < startPoint) direction = !direction;
-
-      tft.drawFastHLine(scanX, 200, 20, TFT_CYAN);
+        brightness += 20;
+      }
       lastAnimMillis = millis();
     }
   }
@@ -302,7 +291,7 @@ public:
     tft.setTextDatum(TL_DATUM);
 
     // Etiketler
-    tft.drawString(String(TXT_FEEDER) + ":", 10, 35);
+    tft.drawString(String(TXT_FEEDER) + ":", 10, HEADER_HEIGHT + 5);
     tft.fillRect(100, 100, 120, 40, ACTIVE_COLOR);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
@@ -333,7 +322,7 @@ public:
     }
     tft.setTextColor(statusColor, BG_COLOR);
     tft.setTextPadding(tft.textWidth("Yemleme Bekliyor"));
-    tft.drawString(statusText, 110, 35);
+    tft.drawString(statusText, 110, HEADER_HEIGHT + 5);
 
     tft.unloadFont();
     tft.setTextPadding(0);
@@ -348,7 +337,7 @@ public:
 
   void drawTaskbar(TFT_eSPI &tft) {
     // 1. Higher Taskbar area (from y:205 to 240)
-    tft.fillRect(0, 205, 320, 35, TSKBAR_COLOR);
+    tft.fillRect(0, 205, 320, TASKBAR_HEIGHT, TSKBAR_COLOR);
     tft.drawFastHLine(0, 205, 320, PASSIVE_COLOR);  // Taskbar border
 
     // 2. Resized Start Button (Centered in the new bar)
@@ -356,7 +345,7 @@ public:
   }
 
   void drawHeader(TFT_eSPI &tft, const char *title, uint16_t bgColor, uint16_t txtColor) {
-    tft.fillRect(0, 0, 320, 30, bgColor);
+    tft.fillRect(0, 0, 320, HEADER_HEIGHT, bgColor);
     // Close Button (X) Configuration
     int btnSize = 30;          // Button height matches header height
     int btnX = 320 - btnSize;  // Flush to the right edge
@@ -596,7 +585,7 @@ public:
 
   //------ DESKTOP PAGE -----
   void drawDesktopPage(TFT_eSPI &tft) {
-    tft.fillRect(0, 0, 320, 30, BG_COLOR);
+    tft.fillRect(0, 0, 320, HEADER_HEIGHT, BG_COLOR);
     tft.loadFont(ATR12);
     tft.setTextDatum(BC_DATUM);
     tft.setTextColor(LBL_COLOR_ALT, BG_COLOR);
@@ -863,7 +852,7 @@ public:
   // LANGUAGE SETTINGS
   int drawLanguagePage(TFT_eSPI &tft, SettingsData &settings, int page = 0) {
     int rowHeight = 30;
-    int startY = 35;
+    int startY = HEADER_HEIGHT + 5;
     int midX = 160;
     int maxRows = 6;
     int topIndex = page * maxRows;
@@ -896,11 +885,46 @@ public:
     return page;
   }
 
+  // --- UPDATE LANGUAGE SETTINGS PAGE ---
+  void updateLanguagePage(TFT_eSPI &tft, SettingsData &settings, int page = 0) {
+    int rowHeight = 30;
+    int startY = HEADER_HEIGHT + 5;
+    int midX = 160;
+    int maxRows = 6;
+    int topIndex = page * maxRows;
+    int lastIndex = (sizeof(languages) / sizeof(languages[0]) - 1);
+    int activeIndex = settings.language;
+    tft.loadFont(ATR24);
+    tft.setTextDatum(MC_DATUM);
+    for (int row = 0; row < maxRows; row++) {
+      int boxY = startY + (row * rowHeight);
+      int textY = boxY + (rowHeight / 2);
+
+      if (row <= lastIndex) {
+        if (row == activeIndex) {
+          tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+          tft.fillRect(0, boxY, SCREEN_WIDTH, rowHeight, ACTIVE_COLOR);
+          tft.drawRect(0, boxY, SCREEN_WIDTH, rowHeight, PASSIVE_COLOR);
+          tft.setTextPadding(tft.textWidth(languages[topIndex + row]));
+          tft.drawString(String(languages[topIndex + row]), midX, textY);
+        } else {
+          tft.setTextColor(LBL_COLOR, PASSIVE_COLOR);
+          tft.fillRect(0, boxY, SCREEN_WIDTH, rowHeight, PASSIVE_COLOR);
+          tft.drawRect(0, boxY, SCREEN_WIDTH, rowHeight, ACTIVE_COLOR);
+          tft.setTextPadding(tft.textWidth(languages[topIndex + row]));
+          tft.drawString(String(languages[topIndex + row]), midX, textY);
+        }
+      }
+    }
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
   //--- DISPLAY SETTINGS PAGE ---
   void drawDisplaySettingsPage(TFT_eSPI &tft, SettingsData &settings) {
     tft.fillRect(0, 80, 320, 80, BG_COLOR);
     int rowY = 80;
     int btnS = 20;
+    int spaceY = 40;
     tft.loadFont(ATR20);
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(LBL_COLOR, BG_COLOR);
@@ -908,7 +932,7 @@ public:
     tft.setTextPadding(tft.textWidth(OPT_ADAPTIVE));
     tft.drawString(String(OPT_ADAPTIVE), 10, 40);
 
-    drawToggleButton(tft, 220, 35, settings.isAdaptive);
+    drawToggleButton(tft, 220, HEADER_HEIGHT + 5, settings.isAdaptive);
 
     // 2. seperator
     tft.drawFastHLine(0, 60, 320, PASSIVE_COLOR);
@@ -923,41 +947,40 @@ public:
 
       tft.fillRoundRect(190, rowY, btnS, btnS, 4, ACTIVE_COLOR);
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.setTextDatum(TC_DATUM);
       tft.setTextPadding(tft.textWidth("-"));
-      tft.drawCentreString("-", 190 + (btnS / 2), rowY, 2);
+      tft.drawString("-", 190 + (btnS / 2), rowY);
 
       tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
       tft.fillRoundRect(210, rowY, 70, btnS, 4, BG_COLOR_ALT);
-      tft.setTextDatum(TC_DATUM);
       tft.setTextPadding(tft.textWidth(String(settings.dayBright)));
       tft.drawString(String(settings.dayBright), 245, 80);
 
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
       tft.fillRoundRect(280, rowY, btnS, btnS, 4, ACTIVE_COLOR);
-      tft.setTextDatum(TL_DATUM);
       tft.setTextPadding(tft.textWidth("+"));
-      tft.drawCentreString("+", 280 + (btnS / 2), rowY, 2);
+      tft.drawString("+", 280 + (btnS / 2), rowY);
 
       tft.setTextColor(LBL_COLOR, BG_COLOR);
+      tft.setTextDatum(TL_DATUM);
       tft.setTextPadding(tft.textWidth(OPT_NIGHT_BRIGHT));
       tft.drawString(String(OPT_NIGHT_BRIGHT), 10, 120);
 
       tft.fillRoundRect(190, rowY + 40, btnS, btnS, 4, ACTIVE_COLOR);
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.setTextDatum(TC_DATUM);
       tft.setTextPadding(tft.textWidth("-"));
-      tft.drawCentreString("-", 190 + (btnS / 2), rowY + 40, 2);
+      tft.drawString("-", 190 + (btnS / 2), rowY + spaceY);
 
       tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
       tft.fillRoundRect(210, rowY + 40, 70, btnS, 4, BG_COLOR_ALT);
-      tft.setTextDatum(TC_DATUM);
       tft.setTextPadding(tft.textWidth(String(settings.nightBright)));
       tft.drawString(String(settings.nightBright), 245, 120);
 
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
-      tft.setTextDatum(TL_DATUM);
       tft.fillRoundRect(280, rowY + 40, btnS, btnS, 4, ACTIVE_COLOR);
       tft.setTextPadding(tft.textWidth("+"));
-      tft.drawCentreString("+", 280 + (btnS / 2), rowY + 40, 2);
+      tft.drawString("+", 280 + (btnS / 2), rowY + spaceY);
     } else {
       // IF ADAPTIVE IS OFF
       tft.setTextColor(LBL_COLOR, BG_COLOR);
@@ -967,19 +990,18 @@ public:
 
       tft.fillRoundRect(190, 80, 20, 20, 4, ACTIVE_COLOR);
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+      tft.setTextDatum(TC_DATUM);
       tft.setTextPadding(tft.textWidth("-"));
-      tft.drawCentreString("-", 190 + (20 / 2), 80, 2);
+      tft.drawString("-", 190 + (btnS / 2), rowY);
 
       tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
       tft.fillRoundRect(210, 80, 70, 20, 4, BG_COLOR_ALT);
-      tft.setTextDatum(TC_DATUM);
       tft.drawString(String(settings.manBright), 245, 80);
 
       tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
       tft.fillRoundRect(280, 80, 20, 20, 4, ACTIVE_COLOR);
-      tft.setTextDatum(TL_DATUM);
       tft.setTextPadding(tft.textWidth("+"));
-      tft.drawCentreString("+", 280 + (20 / 2), 80, 2);
+      tft.drawString("+", 280 + (btnS / 2), rowY);
     }
     tft.unloadFont();
     tft.setTextPadding(0);
