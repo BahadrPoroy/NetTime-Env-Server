@@ -1,4 +1,4 @@
-#ifndef DISPLAY_MANAGER_H
+#ifndef DIPLAY_MANAGER_H
 #define DISPLAY_MANAGER_H
 
 #include "structs.h"
@@ -11,7 +11,7 @@
 #include "Fonts/myFonts.h"
 #include "TimeManager.h"
 
-#define VERSION "NetTime OS v2.8.6-pre-alpha (2026)"
+#define VERSION "NetTime OS v2.8.7-pre-alpha (2026)"
 
 
 
@@ -146,12 +146,12 @@ public:
   int brightness = 0;
 
   void updateLoadingAnimation(TFT_eSPI &tft) {
-    // Run animation frame every 2ms without using delay()
-    if (millis() - lastAnimMillis >= 5) {  
+    // Run animation frame every 5ms without using delay()
+    if (millis() - lastAnimMillis >= 5) {
       if (brightness <= MAX_PWM) {
         analogWrite(TFT_LED, brightness);
 
-        brightness += 20;
+        brightness += 10;
       }
       lastAnimMillis = millis();
     }
@@ -292,11 +292,16 @@ public:
 
     // Etiketler
     tft.drawString(String(TXT_FEEDER) + ":", 10, HEADER_HEIGHT + 5);
-    tft.fillRect(100, 100, 120, 40, ACTIVE_COLOR);
+    tft.fillRect(100, 80, 120, 40, ACTIVE_COLOR);
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
-    tft.setTextPadding(tft.textWidth(TXT_FEEDER));
-    tft.drawString(TXT_FEEDER, 160, 120);
+    tft.setTextPadding(tft.textWidth(FEEDER_BTN));
+    tft.drawString(FEEDER_BTN, 160, 100);
+
+    tft.fillRect(100, 140, 120, 40, ACTIVE_COLOR);
+    tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+    tft.setTextPadding(tft.textWidth(FEEDER_HOME_BUTTON));
+    tft.drawString(FEEDER_HOME_BUTTON, 160, 160);
     tft.unloadFont();
     tft.setTextPadding(0);
   }
@@ -935,7 +940,7 @@ public:
     drawToggleButton(tft, 220, HEADER_HEIGHT + 5, settings.isAdaptive);
 
     // 2. seperator
-    tft.drawFastHLine(0, 60, 320, PASSIVE_COLOR);
+    tft.drawFastHLine(0, 70, 320, PASSIVE_COLOR);
 
     // 3. Dynamic Area (Depends on Adaptive Brightness)
     if (settings.isAdaptive) {
@@ -1041,7 +1046,6 @@ public:
 
     if (!settings.isAdaptive) return;
 
-
     static unsigned long lastCheck = 0;
     if (millis() - lastCheck < 60000 && !isNow) return;
     lastCheck = millis();
@@ -1061,5 +1065,94 @@ public:
       lastDayState = itIsDaytime;
     }
   }
+  // DISPLAY SETTINGS END
+
+  // FEEDER SETTINGS START
+  void drawFeederSettings(TFT_eSPI &tft, SettingsData &settings) {
+    int startY = HEADER_HEIGHT + 15;
+    int startX = 10;
+    int endX = SCREEN_WIDTH - 10;
+    int endY = SCREEN_HEIGHT - TASKBAR_HEIGHT;
+    int rowY = 40;
+    int btnS = 20;
+    int valueRectW = 70;
+    int rectSX = endX - 110;  // Start X of rectangles
+    tft.loadFont(ATR20);
+    // Labels
+    tft.setTextPadding(0);
+    tft.setTextDatum(TL_DATUM);
+    tft.setTextColor(LBL_COLOR, BG_COLOR);
+    tft.setTextPadding(tft.textWidth(String(OPT_FEED_START)));
+    tft.drawString(OPT_FEED_START, startX, startY);
+
+    tft.setTextPadding(tft.textWidth(String(OPT_FEED_END)));
+    tft.drawString(OPT_FEED_END, startX, startY + rowY);
+    // Buttons & Values
+    tft.fillRoundRect(rectSX, startY, btnS, btnS, 4, ACTIVE_COLOR);
+    tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextPadding(tft.textWidth("-"));
+    tft.drawString("-", rectSX + (btnS / 2), startY + (btnS / 2));
+
+    tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+    tft.fillRoundRect((rectSX + btnS), startY, valueRectW, btnS, 4, BG_COLOR_ALT);
+    tft.setTextPadding(tft.textWidth(String(settings.feederStart)));
+    tft.drawString(String(settings.feederStart), rectSX + btnS + (valueRectW / 2), startY + (btnS / 2));
+
+    tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+    tft.fillRoundRect(rectSX + btnS + valueRectW, startY, btnS, btnS, 4, ACTIVE_COLOR);
+    tft.setTextPadding(tft.textWidth("+"));
+    tft.drawString("+", rectSX + valueRectW + btnS + (btnS / 2), startY + (btnS / 2));
+
+    tft.fillRoundRect(rectSX, rowY + startY, btnS, btnS, 4, ACTIVE_COLOR);
+    tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextPadding(tft.textWidth("-"));
+    tft.drawString("-", rectSX + (btnS / 2), startY + rowY + (btnS / 2));
+
+    tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+    tft.fillRoundRect(rectSX + btnS, rowY + startY, valueRectW, btnS, 4, BG_COLOR_ALT);
+    tft.setTextPadding(tft.textWidth(String(settings.feederEnd)));
+    tft.drawString(String(settings.feederEnd), rectSX + btnS + (valueRectW / 2), startY + rowY + (btnS / 2));
+
+    tft.setTextColor(LBL_COLOR_ALT, ACTIVE_COLOR);
+    tft.fillRoundRect(rectSX + btnS + valueRectW, rowY + startY, btnS, btnS, 4, ACTIVE_COLOR);
+    tft.setTextPadding(tft.textWidth("+"));
+    tft.drawString("+", rectSX + valueRectW + btnS + (btnS / 2), startY + rowY + (btnS / 2));
+
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+  // FEEDER SETTINGS END
+
+  // UPDATE FEEDER SETTNINGS START
+  void updateFeederSettings(TFT_eSPI &tft, SettingsData &settings) {
+    int startY = HEADER_HEIGHT + 15;
+    int startX = 10;
+    int endX = SCREEN_WIDTH - 10;
+    int endY = SCREEN_HEIGHT - TASKBAR_HEIGHT;
+    int rowY = 40;
+    int btnS = 20;
+    int valueRectW = 70;
+    int rectSX = endX - 110;
+
+    tft.loadFont(ATR20);
+    tft.setTextDatum(MC_DATUM);
+    
+    tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+    tft.fillRoundRect((rectSX + btnS), startY, valueRectW, btnS, 4, BG_COLOR_ALT);
+    tft.setTextPadding(tft.textWidth(String(settings.feederStart)));
+    tft.drawString(String(settings.feederStart), rectSX + btnS + (valueRectW / 2), startY + (btnS / 2));
+
+
+    tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
+    tft.fillRoundRect(rectSX + btnS, rowY + startY, valueRectW, btnS, 4, BG_COLOR_ALT);
+    tft.setTextPadding(tft.textWidth(String(settings.feederEnd)));
+    tft.drawString(String(settings.feederEnd), rectSX + btnS + (valueRectW / 2), startY + rowY + (btnS / 2));
+
+    tft.unloadFont();
+    tft.setTextPadding(0);
+  }
+  // UPDATE FEEDER SETTNINGS END
 };
 #endif

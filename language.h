@@ -35,8 +35,8 @@ const char* const langTable[][2] = {
   { "FEEDER SYSTEM", "YEMLEME SİSTEMİ" },                                       // 29
   { "INDOOR", "ODA HAVASI" },                                                   // 30
   { "OUTDOOR", "DIŞ HAVA DURUMU" },                                             // 31
-  { "IN", "İÇ" },                                                           // 32
-  { "OUT", "DIŞ" },                                                         // 33
+  { "IN", "İÇ" },                                                               // 32
+  { "OUT", "DIŞ" },                                                             // 33
   { "Updating...", "Güncelleniyor..." },                                        // 34
   { "Language", "Dil" },                                                        // 35
   { "Display", "Ekran" },                                                       // 36
@@ -45,7 +45,9 @@ const char* const langTable[][2] = {
   { "Day Brightness", "Gündüz Parlaklığı" },                                    // 39
   { "Night Brightness", "Gece Parlaklığı" },                                    // 40
   { "Feeder Start", "Yemleme Başlangıcı" },                                     // 41
-  { "Feeder End", "Yemleme Bitişi" }                                            // 42
+  { "Feeder End", "Yemleme Bitişi" },                                           // 42
+  { "Home", "Ev" },                                                             // 43
+  { "Feed", "Besle" }                                                           // 44
 };
 
 // --- 2. Week day names ---
@@ -88,7 +90,7 @@ const char* const languages[] = { "English", "Türkçe" };
 #define TXT_WAIT langTable[26][settingsData.language]
 #define TXT_ERR langTable[27][settingsData.language]
 #define TXT_FEEDER langTable[28][settingsData.language]
-#define FEEDER_BTN TXT_FEEDER
+#define FEEDER_BTN langTable[44][settingsData.language]
 #define FEEDER_TITLE langTable[29][settingsData.language]
 #define TXT_INDOOR langTable[30][settingsData.language]
 #define TXT_OUTDOOR langTable[31][settingsData.language]
@@ -104,5 +106,6 @@ const char* const languages[] = { "English", "Türkçe" };
 #define OPT_NIGHT_BRIGHT langTable[40][settingsData.language]
 #define OPT_FEED_START langTable[41][settingsData.language]
 #define OPT_FEED_END langTable[42][settingsData.language]
+#define FEEDER_HOME_BUTTON langTable[43][settingsData.language]
 
 #endif

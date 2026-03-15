@@ -116,9 +116,6 @@ void loop() {
         displayBox.updateFeeder(tft, feederStatus, isFed);
         break;
 
-      case SETTINGS_PAGE:
-        break;
-
       default:
         break;
     }
@@ -131,7 +128,7 @@ void loop() {
   }
 
   // --- Feeding Control ---
-  if (timeBox.getHour() >= 12 && timeBox.getHour() <= 15) {
+  if (timeBox.getHour() >= settingsData.feederStart && timeBox.getHour() <= settingsData.feederEnd) {
     if (feederStatus == "ERROR_HARDWARE") {
       feederAlarmColor = TFT_RED;  // Critical error, don't send command
     } else if (!isFed) {
@@ -245,8 +242,11 @@ void handleInput() {
     if (x > 290 && y < 30) {
       switchPage(DESKTOP_PAGE);
     }
-    if (x > 95 && x < 225 && y > 95 && y < 145 && !isFed) {
-      netBox.broadcastUDP("FEED_NOW");
+    if (x >= 95 && x < 225) {
+      if (y >= 80 && y <= 120 && !isFed)
+        netBox.broadcastUDP("FEED_NOW");
+      else if (y >= 140 && y <= 180)
+        netBox.broadcastUDP("RESTART");
     }
   }  // --- FEEDER_PAGE End / SETTINGS_PAGE Start ---
   else if (currentPage == SETTINGS_PAGE) {
@@ -258,8 +258,8 @@ void handleInput() {
         switchPage(LANGUAGE_SETTINGS);
       else if (x > 85 && x < 155)
         switchPage(DISPLAY_SETTINGS);
-      //else if (x > 165 && x < 235)
-      //switchPage(FEEDER_SETTINGS);
+      else if (x > 165 && x < 235)
+        switchPage(FEEDER_SETTINGS);
     }
   }  // --- SETTINGS_PAGE End / LANGUAGE_SETTINGS Start ---
   else if (currentPage == LANGUAGE_SETTINGS) {
@@ -362,8 +362,55 @@ void handleInput() {
     }
   }  // --- DISPLAY_SETTINGS End / FEEDER_SETTINGS Start ---
   else if (currentPage == FEEDER_SETTINGS) {
+    int startY = HEADER_HEIGHT + 15;
+    int startX = 10;
+    int endX = SCREEN_WIDTH - 10;
+    int endY = SCREEN_HEIGHT - TASKBAR_HEIGHT;
+    int rowY = 40;
+    int btnS = 20;
+    int valueRectW = 70;
+    int rectSX = endX - 110;
     if (x > 290 && y < 30) {
       switchPage(SETTINGS_PAGE);
+    }
+    if (y >= startY && y <= startY + 20) {
+      if (x >= rectSX && x <= rectSX + btnS) {
+        settingsData.feederStart -= 1;
+        if (settingsData.feederStart < 0)
+          settingsData.feederStart = 0;
+        if (settingsData.feederStart > settingsData.feederEnd)
+          settingsData.feederStart = settingsData.feederEnd;
+        displayBox.updateFeederSettings(tft, settingsData);
+        netBox.updateSetting("feederStart", settingsData.feederStart);
+      }
+      if (x >= rectSX + valueRectW && x <= endX) {
+        settingsData.feederStart += 1;
+        if (settingsData.feederStart > 23)
+          settingsData.feederStart = 23;
+        if (settingsData.feederStart > settingsData.feederEnd)
+          settingsData.feederStart = settingsData.feederEnd;
+        displayBox.updateFeederSettings(tft, settingsData);
+        netBox.updateSetting("feederStart", settingsData.feederStart);
+      }
+    } else if (y >= startY + rowY && y <= startY + rowY + btnS) {
+      if (x >= rectSX && x <= rectSX + btnS) {
+        settingsData.feederEnd -= 1;
+        if (settingsData.feederEnd < 0)
+          settingsData.feederEnd = 0;
+        if (settingsData.feederEnd < settingsData.feederStart)
+          settingsData.feederEnd = settingsData.feederStart;
+        displayBox.updateFeederSettings(tft, settingsData);
+        netBox.updateSetting("feederEnd", settingsData.feederEnd);
+      }
+      if (x >= rectSX + valueRectW && x <= endX) {
+        settingsData.feederEnd += 1;
+        if (settingsData.feederEnd > 23)
+          settingsData.feederEnd = 23;
+        if (settingsData.feederEnd < settingsData.feederStart)
+          settingsData.feederEnd = settingsData.feederStart;
+        displayBox.updateFeederSettings(tft, settingsData);
+        netBox.updateSetting("feederEnd", settingsData.feederEnd);
+      }
     }
   }  // --- FEEDER_SETTINGS End ---
   else {
@@ -425,7 +472,11 @@ void switchPage(Page targetPage) {
       displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
       displayBox.drawDisplaySettingsPage(tft, settingsData);
       break;
+    case FEEDER_SETTINGS:
+      displayBox.drawHeader(tft, SETTINGS_TITLE, BG_COLOR_ALT, LBL_COLOR_ALT);
+      displayBox.drawFeederSettings(tft, settingsData);
+      break;
     default:
       break;
   }
-}
+}        

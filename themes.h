@@ -14,12 +14,12 @@ struct Theme {
 
 // (Default) Turquoise Theme
 const Theme TurquoiseTheme = {
-  0x0000,  // TFT_BLACK
-  0x04DF,  // Active Turquoise/Text color on labels
-  0x0063,  // Alternative Background/Passive value
-  0xFFFF,  // TFT_WHITE
-  0x04DF,  // Border
-  0x0112   //Taskbar
+  0x0000,  // Background Color (black)
+  0x04DF,  // Active Color (turquoise)
+  0x0063,  // Passive & Alternative Background (dark blue)
+  0xFFFF,  // Alternative Label Color (white)
+  0x04DF,  // Border (turquoise)
+  0x0112   //Taskbar (blue)
 };
 
 extern const Theme* currentTheme;
