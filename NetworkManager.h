@@ -47,6 +47,8 @@ private:
         filter["current"]["humidity"] = true;
         filter["current"]["weather"][0]["icon"] = true;
         filter["current"]["weather"][0]["description"] = true;
+        filter["current"]["sunrise"] = true;
+        filter["current"]["sunset"] = true;
 
         // Use a DynamicJsonDocument to store the filtered result
         JsonDocument doc;
@@ -58,6 +60,8 @@ private:
           currentWeather.humidity = doc["current"]["humidity"];
           currentWeather.icon = doc["current"]["weather"][0]["icon"].as<String>();
           currentWeather.description = doc["current"]["weather"][0]["description"].as<String>();
+          currentWeather.sunrise = doc["current"]["sunrise"];
+          currentWeather.sunset = doc["current"]["sunset"];
           currentWeather.updated = true;
         }
       } else {
@@ -112,17 +116,17 @@ public:
       tft.loadFont(ATR16);
       tft.setTextColor(TFT_GREEN, TFT_BLACK);
       tft.setTextDatum(MC_DATUM);
-      tft.setTextPadding(300);  // Ekran genişliğine yakın padding
+      tft.setTextPadding(300);  
 
       String text = String(TXT_UPDATE_SUCCESS);
       int newLinePos = text.indexOf('\n');
 
       if (newLinePos != -1) {
-        // Eğer metinde \n varsa iki parça halinde yaz
+        
         tft.drawString(text.substring(0, newLinePos), 160, 110);
         tft.drawString(text.substring(newLinePos + 1), 160, 140);
       } else if (tft.textWidth(text) > 300) {
-        // Metin çok uzunsa ve \n yoksa, ortadan böl (veya sen dile göre manuel ayarla)
+        
         tft.drawString(text, 160, 120);
       } else {
         tft.drawString(text, 160, 120);
@@ -144,6 +148,40 @@ public:
     Firebase.setInt(firebaseData, "/NetTime/timestamp", ts);
     Firebase.setBool(firebaseData, "/NetTime/isFed", isFed);
     Firebase.setInt(firebaseData, "/NetTime/lastFedTime", lastFedTime);
+  }
+
+  //--- Firebase Read for Settings ---
+  void readSettings(SettingsData &settings) {
+    if (Firebase.getJSON(firebaseData, "/Settings")) {
+      FirebaseJson settingsJson = firebaseData.jsonObject();
+      FirebaseJsonData data;
+
+      if (settingsJson.get(data, "feederStart"))
+        settings.feederStart = data.intValue;
+      if (settingsJson.get(data, "feederEnd"))
+        settings.feederEnd = data.intValue;
+      if (settingsJson.get(data, "dayBright"))
+        settings.dayBright = data.intValue;
+      if (settingsJson.get(data, "manBright"))
+        settings.manBright = data.intValue;
+      if (settingsJson.get(data, "nightBright"))
+        settings.nightBright = data.intValue;
+      if (settingsJson.get(data, "isAdaptive"))
+        settings.isAdaptive = data.boolValue;
+      if (settingsJson.get(data, "language"))
+        settings.language = data.intValue;
+    }
+  }
+  // --- // // // --- //
+
+  // --- Firebase Update for Settings ---
+  void updateSetting(String key, int value) {
+    Firebase.setInt(firebaseData, "/Settings/" + key, value);
+  }
+
+  // Overload: Bool değerler için (isAdaptive)
+  void updateSetting(String key, bool value) {
+    Firebase.setBool(firebaseData, "/Settings/" + key, value);
   }
 
   void readFirebase(bool &isFed, long &lastFedTime) {
