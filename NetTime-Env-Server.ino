@@ -1,9 +1,10 @@
 #include <TFT_eSPI.h>
-#include <dht11.h>
 #include <SD.h>
 #include "themes.h"
 #include "config.h"
 #include "structs.h"
+#include <DHT.h>
+#include <DHT_U.h>
 
 extern SettingsData settingsData;
 SettingsData settingsData;
@@ -15,7 +16,7 @@ SettingsData settingsData;
 
 // Global instances
 TFT_eSPI tft = TFT_eSPI();
-dht11 DHT;
+DHT DHT(DHTPIN, DHTTYPE);
 DisplayManager displayBox;
 TouchManager touchBox;
 NetworkManager netBox;
@@ -27,6 +28,7 @@ unsigned long lastClockUpdate = 0;
 unsigned long lastSensorUpdate = 0;
 unsigned long lastFirebaseSync = 0;
 unsigned long lastUIUpdate = 0;
+unsigned long lastDHTUpdate = 0;
 
 Page currentPage = NONE;
 
@@ -63,6 +65,7 @@ void setup() {
   // Connect WiFi while animating
   netBox.begin(tft, displayBox);
   timeBox.begin();
+  DHT.begin();
   netBox.readFirebase(isFed, lastFedTime);
   yield();
 
@@ -80,16 +83,22 @@ void loop() {
   netBox.handleOpenWeather();
   displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
 
-  // Unified UI and Sensor Update (Every 1 second)
-  if (millis() - lastUIUpdate >= 1000) {
-    lastUIUpdate = millis();
+
+  // DHT update (Every 2 seconds)
+  if (millis() - lastDHTUpdate >= 2000) {
+    lastDHTUpdate = millis();
 
     // --- 1. SENSORS (Background) ---
     DHT.read(DHTPIN);
     currentTemp = (float)DHT.temperature;
     currentHum = (float)DHT.humidity;
+  }
 
-    // --- 2. GLOBAL UI (Taskbar - Always Visible) ---
+  // Unified UI and Sensor Update (Every 1 second)
+  if (millis() - lastUIUpdate >= 1000) {
+    lastUIUpdate = millis();
+
+    // --- 1. GLOBAL UI (Taskbar - Always Visible) ---
     displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
     displayBox.drawWifiIcon(tft, netBox.getSignalLevel());
 
@@ -120,7 +129,7 @@ void loop() {
         break;
     }
 
-    // 3. EXPANDED CLOCK (Overlay)
+    // 2. EXPANDED CLOCK (Overlay)
     if (displayBox.isClockExpanded) {
       displayBox.drawExpandedClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate(),
                                    timeBox.getDayName(), WiFi.SSID());
@@ -154,14 +163,14 @@ void loop() {
     feederStatus = "IDLE";
   }
 
-  // --- 4. FIREBASE SYNC (Every 20 seconds) ---
+  // --- 3. FIREBASE SYNC (Every 20 seconds) ---
   if (millis() - lastFirebaseSync >= 20000) {
     lastFirebaseSync = millis();
     netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
                           timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
   }
 
-  // --- 5. TOUCH CONTROLS ---
+  // --- 4. TOUCH CONTROLS ---
   handleInput();
   displayBox.drawSystemTray(tft, isFeederAlarmActive, feederAlarmColor);
 }
@@ -479,4 +488,5 @@ void switchPage(Page targetPage) {
     default:
       break;
   }
-}        
+}
+        

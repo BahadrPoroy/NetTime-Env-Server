@@ -15,7 +15,7 @@
 
 #define TOUCH_CS 2  // D4
 
-#define SD_CS 16
+#define SD_CS 16  // D0
 
 // SPI Pins (Common for TFT & Touch)
 #define SPI_SCK 14   // D5
@@ -27,6 +27,9 @@
 
 #ifndef DHTLIB_OK
 #define DHTLIB_OK 0
+
+// DHT Type
+#define DHTTYPE DHT22
 
 //Definition of Pages
 enum Page {
