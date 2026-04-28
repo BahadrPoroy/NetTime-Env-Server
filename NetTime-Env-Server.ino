@@ -84,14 +84,14 @@ void loop() {
   displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
 
 
-  // DHT update (Every 2 seconds)
+  // DHT update (Every 3 seconds)
   if (millis() - lastDHTUpdate >= 2000) {
     lastDHTUpdate = millis();
 
     // --- 1. SENSORS (Background) ---
     DHT.read(DHTPIN);
-    currentTemp = (float)DHT.temperature;
-    currentHum = (float)DHT.humidity;
+    currentTemp = DHT.readTemperature();
+    currentHum = DHT.readHumidity();
   }
 
   // Unified UI and Sensor Update (Every 1 second)
