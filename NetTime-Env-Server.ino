@@ -166,7 +166,7 @@ void loop() {
   // --- 3. FIREBASE SYNC (Every 20 seconds) ---
   if (millis() - lastFirebaseSync >= 20000) {
     lastFirebaseSync = millis();
-    netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
+    netBox.updateFirebase(DHT.readTemperature(), DHT.readHumidity(),
                           timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
   }
 
@@ -489,4 +489,3 @@ void switchPage(Page targetPage) {
       break;
   }
 }
-        
