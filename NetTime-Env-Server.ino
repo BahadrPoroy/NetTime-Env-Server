@@ -53,11 +53,14 @@ void setup() {
   pinMode(TFT_LED, OUTPUT);
   analogWrite(TFT_LED, 0);
 
-  if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
-    Serial.println("SD Card Error!");
-  }
-
   displayBox.init(tft);
+
+  if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
+    tft.setTextDatum(MC_DATUM);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_RED);
+    tft.drawString("SD Card Error!", 160, 120);
+  }
 
   // Show logo immediately
   displayBox.drawStaticSplash(tft);

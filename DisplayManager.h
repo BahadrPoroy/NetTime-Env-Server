@@ -217,7 +217,7 @@ public:
 
     tft.loadFont(ATR20);
     tft.drawString(String(TXT_INDOOR_TEMP) + ":", startX, startY + spaceY);
-    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88 °C") + spaceX;
+    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88.8 °C") + spaceX;
     if (secondRow <= 160) secondRow = centerX + spaceX;
     tft.drawString(String(TXT_OUTDOOR_TEMP) + ":", secondRow, startY + spaceY);
     tft.unloadFont();
@@ -247,7 +247,7 @@ public:
     tft.setTextColor(LBL_COLOR, BG_COLOR);
     tft.setTextPadding(tft.textWidth("88.8 °C"));
     tft.drawString(String(intemp, 1) + " °C", tft.textWidth(TXT_INDOOR_TEMP) + spaceX, startY + spaceY);
-    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88 °C") + spaceX;
+    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88.8 °C") + spaceX;
     if (secondRow <= 160) secondRow = centerX + tft.textWidth(TXT_INDOOR_TEMP) + 2 * spaceX;
     tft.drawString(String(weather.temp, 1) + " °C", secondRow, startY + spaceY);
     tft.unloadFont();
@@ -428,7 +428,7 @@ public:
 
     // Update Humidity Value
     tft.setTextPadding(tft.textWidth("%100"));
-    tft.drawString("%" + String(roomHum, 0), 260, 65);
+    tft.drawString("%" + String(roomHum, 1), 250, 65);
 
     // 2. Update Outdoor Data (OpenWeather)
     if (weather.updated) {
