@@ -2,16 +2,16 @@
 #define NETWORK_MANAGER_H
 
 #include "structs.h"
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <FirebaseESP8266.h>
 #include <ArduinoOTA.h>
 #include <WiFiUdp.h>
-#include <ESP8266HTTPClient.h>
+#include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
 
-class NetworkManager {
+class NetBoxManager {
 private:
   FirebaseData firebaseData;
   FirebaseConfig config;
@@ -197,7 +197,7 @@ public:
     IPAddress broadcastIP = WiFi.localIP();
     broadcastIP[3] = 255;
     udp.beginPacket(broadcastIP, OUTGOING_PORT);  //Updated
-    udp.write(message.c_str());
+    udp.write((const uint8_t*)message.c_str(), message.length());
     udp.endPacket();
   }
 

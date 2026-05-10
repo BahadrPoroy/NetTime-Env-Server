@@ -8,22 +8,22 @@
 #undef SD_CS
 
 // TFT & Touch Pins
-#define TFT_CS 15   // D8
-#define TFT_DC 0    // D3
-#define TFT_RST -1  // Disabled
-#define TFT_LED 4   // D2 (Backlight PWM)
+#define TFT_CS 15   
+#define TFT_DC 2    
+#define TFT_RST 12  
+#define TFT_LED 21  //(Backlight PWM)
 
-#define TOUCH_CS 2  // D4
+#define TOUCH_CS 13
 
-#define SD_CS 16
+#define SD_CS 5
 
 // SPI Pins (Common for TFT & Touch)
-#define SPI_SCK 14   // D5
-#define SPI_MISO 12  // D6
-#define SPI_MOSI 13  // D7
+#define SPI_SCK 18
+#define SPI_MISO 19
+#define SPI_MOSI 23
 
 // Sensor Pins
-#define DHTPIN 5  // D1
+#define DHTPIN 4
 
 #ifndef DHTLIB_OK
 #define DHTLIB_OK 0

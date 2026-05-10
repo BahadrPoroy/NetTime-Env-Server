@@ -5,13 +5,13 @@
 #include <TFT_eSPI.h>
 #include <SD.h>
 #include <LittleFS.h>
-#include <ESP8266WiFi.h>  // Required to use the WiFi object inside this class
+#include <WiFi.h>  // Required to use the WiFi object inside this class
 #include "config.h"
 #include "language.h"
 #include "Fonts/myFonts.h"
 #include "TimeManager.h"
 
-#define VERSION "NetTime OS v2.8.7 (2026)"
+#define VERSION "NetTime OS v3.0.0 (2026)"
 
 
 
@@ -27,9 +27,9 @@ uint16_t lastFishColor = 0;  // To track state changes
 bool lastFishState = false;
 
 // --- RAM Bar Color Zones & RAM Values---
-const uint32_t maxUsableHeap = 43008;  //42 KB Max Usable Ram Capacity
-const uint32_t RAM_DANGER = 12000;     // 12 KB below is critical (red)
-const uint32_t RAM_WARNING = 22000;    // 22 KB below is dangerous (yellow)
+const uint32_t maxUsableHeap = 240000;  // 240 KB Max Usable Ram Capacity
+const uint32_t RAM_DANGER = 40000;      // 40 KB below is critical (red)
+const uint32_t RAM_WARNING = 80000;     // 80 KB below is dangerous (yellow)
 
 class DisplayManager {
 private:
@@ -217,7 +217,7 @@ public:
 
     tft.loadFont(ATR20);
     tft.drawString(String(TXT_INDOOR_TEMP) + ":", startX, startY + spaceY);
-    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88 °C") + spaceX;
+    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88.8 °C") + spaceX;
     if (secondRow <= 160) secondRow = centerX + spaceX;
     tft.drawString(String(TXT_OUTDOOR_TEMP) + ":", secondRow, startY + spaceY);
     tft.unloadFont();
@@ -247,7 +247,7 @@ public:
     tft.setTextColor(LBL_COLOR, BG_COLOR);
     tft.setTextPadding(tft.textWidth("88.8 °C"));
     tft.drawString(String(intemp, 1) + " °C", tft.textWidth(TXT_INDOOR_TEMP) + spaceX, startY + spaceY);
-    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88 °C") + spaceX;
+    int secondRow = startX + tft.textWidth(TXT_INDOOR_TEMP) + tft.textWidth(": 88.8 °C") + spaceX;
     if (secondRow <= 160) secondRow = centerX + tft.textWidth(TXT_INDOOR_TEMP) + 2 * spaceX;
     tft.drawString(String(weather.temp, 1) + " °C", secondRow, startY + spaceY);
     tft.unloadFont();
@@ -428,8 +428,8 @@ public:
 
     // Update Humidity Value
     tft.setTextPadding(tft.textWidth("%100"));
-    tft.drawString("%" + String(roomHum, 0), 260, 65);
-
+    tft.drawString("%" + String(roomHum, 1), 250, 65);
+    
     // 2. Update Outdoor Data (OpenWeather)
     if (weather.updated) {
       // Weather Icon
@@ -663,7 +663,7 @@ public:
     tft.drawString(String(SYS_RAM) + ": ", 40, statsY);
     tft.drawRect(180, statsY - 6, 100, 12, ACTIVE_COLOR);  // RAM Bar Frame
 
-    uint32_t flashSize = ESP.getFlashChipRealSize();
+    uint32_t flashSize = ESP.getFlashChipSize();
     tft.setTextDatum(TC_DATUM);
     tft.drawString(String(SYS_FLASH) + ": " + String(flashSize / 1048576) + " MB", 160, statsY + lineSpacing);
 
@@ -1138,7 +1138,7 @@ public:
 
     tft.loadFont(ATR20);
     tft.setTextDatum(MC_DATUM);
-    
+
     tft.setTextColor(LBL_COLOR, BG_COLOR_ALT);
     tft.fillRoundRect((rectSX + btnS), startY, valueRectW, btnS, 4, BG_COLOR_ALT);
     tft.setTextPadding(tft.textWidth(String(settings.feederStart)));

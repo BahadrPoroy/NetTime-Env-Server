@@ -1,9 +1,10 @@
 #include <TFT_eSPI.h>
-#include <dht11.h>
 #include <SD.h>
 #include "themes.h"
 #include "config.h"
 #include "structs.h"
+#include <DHT.h>
+#include <DHT_U.h>
 
 extern SettingsData settingsData;
 SettingsData settingsData;
@@ -15,10 +16,10 @@ SettingsData settingsData;
 
 // Global instances
 TFT_eSPI tft = TFT_eSPI();
-dht11 DHT;
+DHT DHT(DHTPIN, DHTTYPE);
 DisplayManager displayBox;
 TouchManager touchBox;
-NetworkManager netBox;
+NetBoxManager netBox;
 TimeManager timeBox;
 
 const Theme* currentTheme = &TurquoiseTheme;
@@ -27,6 +28,7 @@ unsigned long lastClockUpdate = 0;
 unsigned long lastSensorUpdate = 0;
 unsigned long lastFirebaseSync = 0;
 unsigned long lastUIUpdate = 0;
+unsigned long lastDHTUpdate = 0;
 
 Page currentPage = NONE;
 
@@ -46,16 +48,19 @@ int pageNo;
 
 void setup() {
   Serial.begin(115200);
-  analogWriteRange(MAX_PWM);
-  analogWriteFreq(1000);
+  //analogWriteRange(MAX_PWM);
+  //analogWriteFreq(1000);
   pinMode(TFT_LED, OUTPUT);
   analogWrite(TFT_LED, 0);
 
-  if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
-    Serial.println("SD Card Error!");
-  }
-
   displayBox.init(tft);
+
+  if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
+    tft.setTextDatum(MC_DATUM);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_RED);
+    tft.drawString("SD Card Error!", 160, 120);
+  }
 
   // Show logo immediately
   displayBox.drawStaticSplash(tft);
@@ -63,6 +68,7 @@ void setup() {
   // Connect WiFi while animating
   netBox.begin(tft, displayBox);
   timeBox.begin();
+  DHT.begin();
   netBox.readFirebase(isFed, lastFedTime);
   yield();
 
@@ -80,14 +86,18 @@ void loop() {
   netBox.handleOpenWeather();
   displayBox.handleAutoBrightness(netBox.currentWeather, settingsData);
 
-  // Unified UI and Sensor Update (Every 1 second)
-  if (millis() - lastUIUpdate >= 1000) {
-    lastUIUpdate = millis();
+
+  if (millis() - lastDHTUpdate >= 2000) {
+    lastDHTUpdate = millis();
 
     // --- 1. SENSORS (Background) ---
     DHT.read(DHTPIN);
-    currentTemp = (float)DHT.temperature;
-    currentHum = (float)DHT.humidity;
+    currentTemp = DHT.readTemperature();
+    currentHum = DHT.readHumidity();
+  }
+  // Unified UI and Sensor Update (Every 1 second)
+  if (millis() - lastUIUpdate >= 1000) {
+    lastUIUpdate = millis();
 
     // --- 2. GLOBAL UI (Taskbar - Always Visible) ---
     displayBox.updateClock(tft, timeBox.getFormattedTime(), timeBox.getFormattedDate());
@@ -479,4 +489,4 @@ void switchPage(Page targetPage) {
     default:
       break;
   }
-}        
+}
