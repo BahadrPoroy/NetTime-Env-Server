@@ -8,14 +8,14 @@
 #undef SD_CS
 
 // TFT & Touch Pins
-#define TFT_CS 15   
+#define TFT_CS 5   
 #define TFT_DC 2    
-#define TFT_RST 12  
+#define TFT_RST 4 
 #define TFT_LED 21  //(Backlight PWM)
 
-#define TOUCH_CS 13
+#define TOUCH_CS 15
 
-#define SD_CS 5
+#define SD_CS 22
 
 // SPI Pins (Common for TFT & Touch)
 #define SPI_SCK 18
@@ -23,10 +23,13 @@
 #define SPI_MOSI 23
 
 // Sensor Pins
-#define DHTPIN 4
+#define DHTPIN 27
 
 #ifndef DHTLIB_OK
 #define DHTLIB_OK 0
+
+// DHT Type
+#define DHTTYPE DHT22
 
 //Definition of Pages
 enum Page {

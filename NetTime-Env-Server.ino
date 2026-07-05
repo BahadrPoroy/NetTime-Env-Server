@@ -55,7 +55,7 @@ void setup() {
 
   displayBox.init(tft);
 
-  if (!SD.begin(SD_CS, SPI_HALF_SPEED)) {
+  if (!SD.begin(SD_CS, SPI, 2000000)) {
     tft.setTextDatum(MC_DATUM);
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_RED);
@@ -167,7 +167,7 @@ void loop() {
   // --- 4. FIREBASE SYNC (Every 20 seconds) ---
   if (millis() - lastFirebaseSync >= 20000) {
     lastFirebaseSync = millis();
-    netBox.updateFirebase((float)DHT.temperature, (float)DHT.humidity,
+    netBox.updateFirebase(currentTemp, currentHum,
                           timeBox.getFormattedTime(), timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
   }
 
