@@ -6,6 +6,7 @@
     <title>NetTime Env Server | Live Dashboard</title>
     <script>document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');</script>
 
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JTCQ9GTPL8"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -14,29 +15,479 @@
         gtag('config', 'G-JTCQ9GTPL8');
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-
+    <!-- Fonts & Firebase -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #1a1a1a;
+            --text-color: #ffffff;
+            --val-color: #ff0000;
+            --btn-bg: #333333;
+            --status-waiting: #ffd54f;
+            --status-ok: #4CAF50;
+            --feed-btn-bg: #e65100;
+            --feed-btn-hover: #f57c00;
+            --feed-btn-active: #bf360c;
+            --feed-btn-shadow: rgba(230, 81, 0, 0.4);
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f0f0f0;
+            --card-bg: #ffffff;
+            --text-color: #1a1a1a;
+            --val-color: #b91c1c;
+            --btn-bg: #dddddd;
+            --status-waiting: #d48806;
+            --status-ok: #2E7D32;
+            --feed-btn-bg: #d97706;
+            --feed-btn-hover: #b45309;
+            --feed-btn-active: #92400e;
+            --feed-btn-shadow: rgba(217, 119, 6, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Orbitron', 'Segoe UI', Tahoma, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+
+        .val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            color: var(--val-color);
+            font-weight: bold;
+            display: block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-width: 350px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: var(--text-color);
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            margin-top: 15px;
+        }
+
+        p {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .lang-btn, .theme-btn {
+            background: var(--btn-bg);
+            color: var(--text-color);
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            position: absolute;
+            top: 20px;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+
+        .lang-btn:active, .theme-btn:active {
+            transform: scale(0.95);
+        }
+
+        .lang-btn { right: 20px; }
+        .theme-btn { left: 20px; }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .row > div {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* --- BESLEME BUTONU VE EYLEM ALANI --- */
+        .action-area {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed #444;
+        }
+
+        .feed-btn {
+            width: 100%;
+            background: var(--feed-btn-bg);
+            color: #ffffff;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--feed-btn-shadow);
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .feed-btn:hover:not(:disabled) {
+            background: var(--feed-btn-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--feed-btn-shadow);
+        }
+
+        .feed-btn:active:not(:disabled) {
+            background: var(--feed-btn-active);
+            transform: translateY(1px);
+            box-shadow: 0 2px 10px var(--feed-btn-shadow);
+        }
+
+        .feed-btn:disabled {
+            background: #555555;
+            color: #888888;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .feed-btn .icon {
+            font-size: 1.3rem;
+        }
+
+        #status {
+            color: var(--status-waiting);
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        #status.connected {
+            color: var(--status-ok);
+        }
+        
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #d32f2f;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1000;
+        }
+        
+        #toast-container.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 480px) {
+            .card { padding: 20px; }
+            .val { font-size: 1.8rem; }
+            .feed-btn {
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="card">
         <button id="theme-toggle" class="theme-btn">🌙/☀️</button>
         <button id="btn-lang" class="lang-btn">EN</button>
         <h2 id="lbl-title">NetTime Sunucusu</h2>
+
         <p><span id="lbl-date">Tarih</span>:<br><span id="date" class="val">--/--/--</span></p>
         <p><span id="lbl-time">Saat</span>:<br><span id="t" class="val">--:--:--</span></p>
+
         <div class="row">
-            <div><p><span id="lbl-temp">Sicaklık</span>:<br><span id="tp" class="val">--</span>°C</p></div>
+            <div><p><span id="lbl-temp">Sıcaklık</span>:<br><span id="tp" class="val">--</span>°C</p></div>
             <div><p><span id="lbl-hum">Nem</span>:<br><span id="hm" class="val">--</span>%</p></div>
         </div>
+
         <div class="row">
             <div><p><span id="lbl-isfed">Yemleme</span>:<br><span id="data-isfed" class="val">----</span></p></div>
-            <div><p><span id="lbl-fedtp">Yemleme</span>:<br><span id="data-fedtp" class="val">----</span></p></div>
+            <div><p><span id="lbl-fedtp">Yemleme Zamanı</span>:<br><span id="data-fedtp" class="val">----</span></p></div>
         </div>
+
+        <!-- YEMLEME BUTONU ALANI -->
+        <div class="action-area">
+            <button id="btn-feed" class="feed-btn">
+                <span class="icon">🐟</span>
+                <span id="lbl-feed-btn">YEM VER</span>
+            </button>
+        </div>
+
         <div id="status">Bağlantı bekleniyor...</div>
     </div>
-    <script src="script.js"></script>
+    
+    <!-- Custom Toast UI (alert alternatifi) -->
+    <div id="toast-container">Mesaj</div>
+
+    <script>
+        // --- INITIAL STATE ---
+        let isDataReceived = false;
+        let currentTimestamp = 0;
+        let requestID = null;
+        let driftCorrection = 0;
+        let isFeedingInProgess = false;
+
+        // --- THEME ---
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // --- LANGUAGE ---
+        let currentLang = 'tr';
+        const translations = {
+            tr: {
+                title: "NetTime Sunucusu",
+                date: "Tarih",
+                time: "Saat",
+                temp: "Sıcaklık",
+                hum: "Nem",
+                isFed: "Yemleme Durumu",
+                lastFed: "Yemleme Zamanı",
+                status_ok: "Canlı Veri Akışı Aktif",
+                waiting: "Bağlantı Bekleniyor...",
+                btn_lang: "EN",
+                feed_btn: "YEM VER",
+                feed_sending: "GÖNDERİLİYOR...",
+                feed_success: "TETİKLENDİ!",
+                feed_cooldown: "BEKLEYİNİZ..."
+            },
+            en: {
+                title: "NetTime Server",
+                date: "Date",
+                time: "Time",
+                temp: "Temperature",
+                hum: "Humidity",
+                isFed: "Feeding Status",
+                lastFed: "Feeding Time",
+                status_ok: "Live Data Feed Active",
+                waiting: "Waiting For Connection...",
+                btn_lang: "TR",
+                feed_btn: "FEED NOW",
+                feed_sending: "SENDING...",
+                feed_success: "TRIGGERED!",
+                feed_cooldown: "WAIT..."
+            }
+        };
+
+        const langBtn = document.getElementById('btn-lang');
+        langBtn.addEventListener('click', () => {
+            currentLang = currentLang === 'tr' ? 'en' : 'tr';
+            updateUI();
+        });
+
+        function updateUI() {
+            const t = translations[currentLang];
+            document.getElementById('lbl-title').innerText = t.title;
+            document.getElementById('lbl-date').innerText = t.date;
+            document.getElementById('lbl-time').innerText = t.time;
+            document.getElementById('lbl-temp').innerText = t.temp;
+            document.getElementById('lbl-hum').innerText = t.hum;
+            document.getElementById('lbl-isfed').innerText = t.isFed;
+            document.getElementById('lbl-fedtp').innerText = t.lastFed;
+
+            if (!isFeedingInProgess) {
+                document.getElementById('lbl-feed-btn').innerText = t.feed_btn;
+            }
+
+            const st = document.getElementById('status');
+            if (isDataReceived) {
+                st.innerText = t.status_ok;
+                st.classList.add('connected');
+            } else {
+                st.innerText = t.waiting;
+                st.classList.remove('connected');
+            }
+
+            langBtn.innerText = t.btn_lang;
+        }
+
+        // --- FIREBASE CONFIG & INITIALIZATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBuymOotkf84zMBQYSbT3HZgFmQXoO-o-0",
+            authDomain: "nettime-server.firebaseapp.com",
+            databaseURL: "https://nettime-server-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "nettime-server",
+            storageBucket: "nettime-server.firebasestorage.app",
+            messagingSenderId: "495196153506",
+            appId: "1:495196153506:web:53a57cd0048d4a0dcf99fb"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const dataRef = database.ref('/NetTime');
+
+        // --- CANLI VERİ DİNLEME ---
+        dataRef.on('value', (snapshot) => {
+            const d = snapshot.val();
+            if (d) {
+                isDataReceived = true;
+                document.getElementById('tp').innerText = d.sicaklik ?? "--";
+                document.getElementById('hm').innerText = d.nem ?? "--";
+
+                const isFedText = d.isFed
+                    ? (currentLang === 'tr' ? "Beslendi" : "Fed")
+                    : (currentLang === 'tr' ? "Yemleme Bekleniyor" : "Waiting for Feed");
+
+                document.getElementById('data-isfed').innerText = isFedText;
+
+                if (d.lastFedTime && d.lastFedTime !== "----") {
+                    const fedDate = new Date(d.lastFedTime * 1000);
+                    const now = new Date();
+                    const isToday = fedDate.toDateString() === now.toDateString();
+
+                    const timePart = fedDate.toLocaleTimeString('tr-TR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+
+                    if (isToday) {
+                        document.getElementById('data-fedtp').innerText = timePart;
+                    } else {
+                        const datePart = fedDate.toLocaleDateString('tr-TR', {
+                            day: '2-digit',
+                            month: '2-digit'
+                        }).replace(/\./g, '/');
+                        document.getElementById('data-fedtp').innerText = `${datePart} ${timePart}`;
+                    }
+                } else {
+                    document.getElementById('data-fedtp').innerText = "----";
+                }
+
+                const newTimestamp = d.timestamp;
+                driftCorrection = Date.now() - (newTimestamp * 1000);
+
+                if (!requestID && d.timestamp > 0) {
+                    startFluidClock();
+                }
+                updateUI();
+            }
+        });
+
+        // --- BAGLANTI TAKIBI ---
+        const connectedRef = database.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+                // Connected to Firebase
+            } else {
+                isDataReceived = false;
+                updateUI();
+            }
+        });
+
+        // --- AKICI SAAT DÖNGÜSÜ ---
+        function startFluidClock() {
+            if (requestID) cancelAnimationFrame(requestID);
+            function update() {
+                const now = Date.now();
+                const actualTimestamp = Math.floor((now - driftCorrection) / 1000);
+                let dateObj = new Date(actualTimestamp * 1000);
+
+                let timeString = dateObj.toLocaleTimeString('tr-TR', { hour12: false });
+                let dateString = dateObj.toLocaleDateString('tr-TR').replace(/\./g, '/');
+
+                if (document.getElementById('t').innerText !== timeString) {
+                    document.getElementById('t').innerText = timeString;
+                    document.getElementById('date').innerText = dateString;
+                }
+
+                requestID = requestAnimationFrame(update);
+            }
+            requestID = requestAnimationFrame(update);
+        }
+        
+        // --- TOAST MESAJI (Alert alternatifi) ---
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast-container');
+            toast.innerText = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- YEMLEME BUTONU EYLEMİ ---
+        const feedBtn = document.getElementById('btn-feed');
+        const feedBtnLabel = document.getElementById('lbl-feed-btn');
+
+        feedBtn.addEventListener('click', () => {
+            if (isFeedingInProgess) return;
+
+            const t = translations[currentLang];
+            isFeedingInProgess = true;
+            feedBtn.disabled = true;
+            feedBtnLabel.innerText = t.feed_sending;
+
+            // Firebase `/NetTime/triggerFeed` değerini true yapıyoruz.
+            // ESP32 (NetTime Server) bu değeri dinleyip yerel ağda UDP 'FEED_NOW' yayınlar.
+            dataRef.child('triggerFeed').set(true)
+                .then(() => {
+                    feedBtnLabel.innerText = t.feed_success;
+                    setTimeout(() => {
+                        let cooldownSeconds = 5;
+                        const interval = setInterval(() => {
+                            if (cooldownSeconds > 0) {
+                                feedBtnLabel.innerText = `${t.feed_cooldown} (${cooldownSeconds}s)`;
+                                cooldownSeconds--;
+                            } else {
+                                clearInterval(interval);
+                                isFeedingInProgess = false;
+                                feedBtn.disabled = false;
+                                feedBtnLabel.innerText = translations[currentLang].feed_btn;
+                            }
+                        }, 1000);
+                    }, 1500);
+                })
+                .catch((error) => {
+                    console.error("Firebase Feed Trigger Error:", error);
+                    // alert() yerine toast kullanılıyor
+                    showToast(currentLang === 'tr' ? "Yemleme isteği gönderilemedi!" : "Feed request failed!");
+                    isFeedingInProgess = false;
+                    feedBtn.disabled = false;
+                    feedBtnLabel.innerText = translations[currentLang].feed_btn;
+                });
+        });
+
+        updateUI();
+    </script>
 </body>
 </html>

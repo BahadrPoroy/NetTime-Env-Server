@@ -184,7 +184,7 @@ public:
     IPAddress broadcastIP = WiFi.localIP();
     broadcastIP[3] = 255;
     udp.beginPacket(broadcastIP, OUTGOING_PORT);
-    udp.write((const uint8_t*)message.c_str(), message.length());
+    udp.write((const uint8_t *)message.c_str(), message.length());
     udp.endPacket();
   }
 
@@ -199,6 +199,24 @@ public:
     else if (rssi > -85) return 2;   // Fair
     else if (rssi > -100) return 1;  // Weak
     return 0;                        // No signal
+  }
+
+  // Web Arayüzünden gelen tetikleyiciyi kontrol eder
+  void checkRemoteFeedTrigger() {
+    if (WiFi.status() != WL_CONNECTED) return;
+
+    // Firebase üzerindeki /NetTime/triggerFeed yolunu kontrol et
+    if (Firebase.getBool(firebaseData, "/NetTime/triggerFeed")) {
+      if (firebaseData.dataType() == "boolean" && firebaseData.boolData() == true) {
+        Serial.println("[REMOTE FEED] Web arayüzünden yemleme emri alındı! UDP yayınlanıyor...");
+
+        // Yerel ağa UDP paketi yayınla
+        broadcastUDP("FEED_NOW");
+
+        // Tetikleyiciyi sıfırla (tekrar tetiklenebilmesi için)
+        Firebase.setBool(firebaseData, "/NetTime/triggerFeed", false);
+      }
+    }
   }
 
   void handleFeederNetwork(String &currentFedState, bool &isFed, long &lastFedTime, long currentTimestamp) {

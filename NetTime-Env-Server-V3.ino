@@ -119,6 +119,8 @@ void TaskNetworkAndLogic(void *pvParameters) {
                             timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
       netBox.handleFeederNetwork(feederStatus, isFed, lastFedTime, timeBox.getTimestamp());
       netBox.handleOpenWeather();
+
+      netBox.checkRemoteFeedTrigger();
     }
 
     if (!isFed && (timeBox.getHour() <= settingsData.feederEnd && timeBox.getHour() >= settingsData.feederStart)) {
