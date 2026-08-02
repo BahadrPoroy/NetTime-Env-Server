@@ -46,6 +46,14 @@ public:
     return String(dateBuffer);
   }
 
+  String getFormattedHour() {
+    updateInternalTime();
+    char hourBuffer[7];
+    sprintf(hourBuffer, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+    return String(hourBuffer);
+  }
+
+
   int getHour() {
     return timeinfo.tm_hour;
   }
@@ -55,13 +63,6 @@ public:
   int getSecond() {
     return timeinfo.tm_sec;
   }
-
-  // Returns day of the week (e.g., Monday, Sunday)
-  String getDayName() {
-    updateInternalTime();
-    // tm_wday returns 0 for Sunday, 1 for Monday, etc.
-    return String(dayNames[timeinfo.tm_wday][settingsData.language]);
-}
 };
 
 #endif

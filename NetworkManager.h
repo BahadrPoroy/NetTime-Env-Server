@@ -19,19 +19,19 @@ private:
   WiFiUDP udp;
 
   unsigned long lastWeatherCheck = 0;
-  const unsigned long weatherInterval = 300000;  // 5 minutes (miliseconds)
+  const unsigned long weatherInterval = 300000;  // 5 minutes (milliseconds)
 
-  //Seperated ports for diffrent purposes
-  const int OUTGOING_PORT = 4210;  //Sending port for Master
-  const int INCOMING_PORT = 4211;  //Listening port for Master
-                                   /**
+  // Separated ports for different purposes
+  const int OUTGOING_PORT = 4210;  // Sending port for Master
+  const int INCOMING_PORT = 4211;  // Listening port for Master
+
+  /**
    * @brief Fetches weather data from OpenWeather API using stream parsing to save RAM
    */
   void getWeatherData() {
     if (WiFi.status() != WL_CONNECTED) return;
 
     WiFiClient client;
-
     HTTPClient http;
 
     // Construct the URL using credentials from secrets.h
@@ -50,7 +50,7 @@ private:
         filter["current"]["sunrise"] = true;
         filter["current"]["sunset"] = true;
 
-        // Use a DynamicJsonDocument to store the filtered result
+        // Use a JsonDocument to store the filtered result
         JsonDocument doc;
         // Parse the stream directly to avoid loading the entire string into memory
         DeserializationError error = deserializeJson(doc, http.getStream(), DeserializationOption::Filter(filter));
@@ -74,14 +74,14 @@ private:
 public:
   WeatherData currentWeather;
 
-  void begin(TFT_eSPI &tft, DisplayManager &display) {
+  void begin() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(YOUR_SSID, YOUR_PASS);
 
     Serial.print("Connecting to WiFi");
     while (WiFi.status() != WL_CONNECTED) {
-      display.updateLoadingAnimation(tft);
-      delay(10);
+      Serial.print(".");
+      delay(500);
     }
     Serial.println("\nWiFi Connected");
 
@@ -90,50 +90,38 @@ public:
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
 
-    // OTA Callbacks linked to DisplayManager
+    // OTA Callbacks
     ArduinoOTA.setHostname("NetTime-Env-Server");
     ArduinoOTA.setPassword(YOUR_OTA_PASS);
 
-    static int lastPercentage = -1;  // To track progress and prevent flicker
+    static int lastPercentage = -1;  // To track progress and prevent spamming serial
 
-    ArduinoOTA.onStart([&tft, &display]() {
-      lastPercentage = -1;  // Reset tracker
-      display.showUpdateScreen(tft, 0);
+    ArduinoOTA.onStart([]() {
+      lastPercentage = -1;
+      Serial.println("[OTA] Güncelleme Başlatıldı...");
     });
 
-    ArduinoOTA.onProgress([&tft, &display](unsigned int progress, unsigned int total) {
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       int percentage = (progress / (total / 100));
 
       // ANTI-FLICKER LOGIC: Only update if percentage has actually changed
       if (percentage != lastPercentage) {
         lastPercentage = percentage;
-        display.showUpdateScreen(tft, percentage);
+        Serial.printf("[OTA] İlerleme: %d%%\r\n", percentage);
       }
     });
 
-    ArduinoOTA.onEnd([&tft]() {
-      tft.fillScreen(TFT_BLACK);
-      tft.loadFont(ATR16);
-      tft.setTextColor(TFT_GREEN, TFT_BLACK);
-      tft.setTextDatum(MC_DATUM);
-      tft.setTextPadding(300);  
+    ArduinoOTA.onEnd([]() {
+      Serial.println("\n[OTA] Güncelleme Başarıyla Tamamlandı!");
+    });
 
-      String text = String(TXT_UPDATE_SUCCESS);
-      int newLinePos = text.indexOf('\n');
-
-      if (newLinePos != -1) {
-        
-        tft.drawString(text.substring(0, newLinePos), 160, 110);
-        tft.drawString(text.substring(newLinePos + 1), 160, 140);
-      } else if (tft.textWidth(text) > 300) {
-        
-        tft.drawString(text, 160, 120);
-      } else {
-        tft.drawString(text, 160, 120);
-      }
-
-      tft.setTextPadding(0);
-      tft.unloadFont();
+    ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("[OTA] Hata [%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
     });
 
     ArduinoOTA.begin();
@@ -172,7 +160,6 @@ public:
         settings.language = data.intValue;
     }
   }
-  // --- // // // --- //
 
   // --- Firebase Update for Settings ---
   void updateSetting(String key, int value) {
@@ -196,7 +183,7 @@ public:
   void broadcastUDP(String message) {
     IPAddress broadcastIP = WiFi.localIP();
     broadcastIP[3] = 255;
-    udp.beginPacket(broadcastIP, OUTGOING_PORT);  //Updated
+    udp.beginPacket(broadcastIP, OUTGOING_PORT);
     udp.write((const uint8_t*)message.c_str(), message.length());
     udp.endPacket();
   }

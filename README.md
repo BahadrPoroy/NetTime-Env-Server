@@ -1,4 +1,4 @@
-# 🕒 NetTime-Env-Server v2.8.7 🌐
+# 🕒 NetTime-Env-Server v3.0.0 🌐
 ![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-ffca28?style=flat-square&logo=firebase&logoColor=black)
 ![ESP8266](https://img.shields.io/badge/ESP8266-414141?style=flat-square&logo=espressif&logoColor=white)
@@ -25,7 +25,7 @@
 
 While the original project was a standalone clock, this version transforms the device into a **Cloud-Connected Data Master**, capable of serving multiple clients and a real-time web interface simultaneously via Firebase.
 
-## 🚀 What's New in v2.8.7
+## 🚀 What's New in v3.0.0
 
 <!--- **Status:** ⚠️ Unstable for daily use. ⚠️ -->
 
@@ -34,16 +34,36 @@ While the original project was a standalone clock, this version transforms the d
   - **Dynamic Icons:** Added support for high-quality BMP weather icons stored on the SD card.  
 -->
 
-### 🐟 Feeder System
+<!-- ### 🐟 Feeder System
 - **Anti-Spam Logic (v2.6.1):** Implemented a 180-second cooldown between feeding commands to prevent redundant triggers caused by network latency.
 - **Enhanced Reliability:** Fixed a critical bug in the power loss recovery algorithm.
 - **Smart Fail-Safe:** The system now defaults to `isFed = true` during database read failures to prevent accidental overfeeding.
 - **Initialization Reordering:** Optimized the `begin` sequence of system modules (`netBox`, `timeBox`, `displayBox`) to ensure network stability before Firebase operations.
 - **Stability:** Added `yield()` calls to prevent watchdog resets during intensive network handshakes.
 - **Flexible Feeding Time Window:** Now the feeding window isn't static, it depends on firebase values. And this start & end values could be changed easily on `settings`.
+-->
 
-### 📊 Display & UI Improvements
-<!-- - **Settings Page has been activated:** Home page is now active with base data showcase, There are 3 segments `tempeture (indoor & outdoor)`,`time`and `feeder status`. It provides seing more information on one page. -->
+### System Improvements
+- **Nextion TFT Screen used instead of SPI TFT**
+- **The millis()-based super-loop logic was replaced with FreeRTOS logic.**
+```
+                  ┌──────────────────────────────┐
+                  │    ESP32 FreeRTOS Core       │
+                  └──────────────┬───────────────┘
+                                 │
+     ┌──────────────────┬────────┼─────────┬──────────────────┐
+     ▼                  ▼        ▼         ▼                  ▼
+[TaskSensor]    [TaskNextion] [TaskClock] [TaskUIUpdate]  [TaskNetworkAndLogic]
+ (DHT Read)     (Serial Comm) (Internal)  (Global Scope) (Firebase/OTA/UDP)
+     │                  │        │         │                  │
+     └──────────────────┴────────┼─────────┴──────────────────┘
+                                 ▼
+                     [Semaphore / Mutex Guard]
+                                 │
+                          (NextionSerial)
+```
+<!-- ### 📊 Display & UI Improvements
+ **Settings Page has been activated:** Home page is now active with base data showcase, There are 3 segments `tempeture (indoor & outdoor)`,`time`and `feeder status`. It provides seing more information on one page.
 - **Page icons added for language and display settings under the settings page**
 - **The icons are at `/Assets/Page_Icons/` path**
 - **Language settings have been activated.**
@@ -53,10 +73,10 @@ While the original project was a standalone clock, this version transforms the d
 - **`FEEDER_SETTINGS` page is activated. It includes feeding start & end settings on 24 hour format**
   - ***on settings change, new value is directly updated on firebase***
 - **`SCREEN_WIDTH` and `SCREEN_HEIGHT` constants are added on `config.h` file**
-<!-- - **Icon Update:** Home icon is enchanced with a modern one -->
-<!-- - **Layout Refactoring:** Added home page button and refactored layout of the desktop page icons. -->
+- **Icon Update:** Home icon is enchanced with a modern one 
+- **Layout Refactoring:** Added home page button and refactored layout of the desktop page icons. -->
 
-### 📂 Folder & File Structure Improvements
+<!--### 📂 Folder & File Structure Improvements
 - **Homepage Icons Moved:** In `Assets` folder, a new folder has been created called as `Page_Icons` and all of the desktop icons has been moved in this folder for creating a tidier project structure.
 
 - ### ⚠️ In `drawDesktopPage` function, that in the `displayManager.h` icon paths are updated ###
@@ -70,29 +90,29 @@ While the original project was a standalone clock, this version transforms the d
     - **Theme/color change section**
   - **Status: Navigation to these pages is temporarily restricted while backend integrations are being finalized.**
   - **Note: Features, module names, and UI elements in these sections are subject to change during development.**
-
+-->
 ## 📂 Project Structure
 
 ```
 NetTime-Env-Server
 ├── config.h          # Master Configuration (Pins & Constants)
-├── structs.h         # Centralized Data Structures (WeatherData, etc.)
 ├── DisplayManager.h  # UI Logic, Animations & TFT_eSPI Management
+├── HMI.HMI           # HMI file for nextion screens
+├── structs.h         # Centralized Data Structures (WeatherData, etc.)
 ├── NetworkManager.h  # Firebase, WiFi, UDP & OTA Updates
 ├── TimeManager.h     # NTP Sync & Time Formatting
-├── TouchManager.h    # Touch Input Mapping & Calibration
-├── myFonts.h         # Centralized Font Management
 └── Assets            # Includes fonts, icons and project's showcases
     ├── Page_Icons    # Includes page icons used on desktop and settings pages
     └── Weather_Icons # Includes weather forecast icons got from openWeather
 ```
+*When using SPI TFT, the necessary files are not used, e.g., fonts, touchManager.h*
 
 ## 🛠️ Hardware Requirements
 
-- **MCU:** ESP8266 (NodeMCU or Wemos D1 Mini)
+- **MCU:** ESP32 Dev Module
 - **Sensor:** DHT11 / DHT22 (Temp & Humidity)
-- **Display:** 2.8" ILI9341 TFT display (SPI)
-- **Storage:** MicroSD Card (for assets and fonts)
+- **Display:** 2.8" Nextion TFT display (UART)
+- **Storage:** Built-in memory of Nextion Screen (for assets and fonts)
 
 ## 🌐 The NetTime Ecosystem
   
