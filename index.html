@@ -15,10 +15,11 @@
         gtag('config', 'G-JTCQ9GTPL8');
     </script>
 
-    <!-- Fonts & Firebase -->
+    <!-- Fonts & Firebase (Compat Libraries) -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
     <style>
         :root {
@@ -86,6 +87,7 @@
             border-bottom: 2px solid #444;
             padding-bottom: 15px;
             margin-top: 15px;
+            font-size: 1.5rem;
         }
 
         p {
@@ -125,9 +127,61 @@
             text-align: center;
         }
 
+        /* --- AUTHENTICATION AREA --- */
+        .auth-area {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #444;
+            text-align: left;
+        }
+
+        .auth-area input {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border: 1px solid #555;
+            background: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .auth-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: var(--btn-bg);
+            color: var(--text-color);
+            transition: opacity 0.2s;
+        }
+
+        .auth-btn:hover {
+            opacity: 0.8;
+        }
+
+        #auth-status {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            color: var(--status-waiting);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            word-break: break-all;
+        }
+
         /* --- BESLEME BUTONU VE EYLEM ALANI --- */
         .action-area {
-            margin-top: 25px;
+            margin-top: 20px;
             padding-top: 15px;
             border-top: 1px dashed #444;
         }
@@ -239,18 +293,29 @@
             <div><p><span id="lbl-fedtp">Yemleme Zamanı</span>:<br><span id="data-fedtp" class="val">----</span></p></div>
         </div>
 
-        <!-- YEMLEME BUTONU ALANI -->
+        <!-- YEMLEME BUTONU ALANI (Başlangıçta devre dışı) -->
         <div class="action-area">
-            <button id="btn-feed" class="feed-btn">
+            <button id="btn-feed" class="feed-btn" disabled>
                 <span class="icon">🐟</span>
                 <span id="lbl-feed-btn">YEM VER</span>
             </button>
         </div>
 
+        <!-- AUTHENTICATION PANEL -->
+        <div class="auth-area">
+            <input type="email" id="userEmail" placeholder="E-posta">
+            <input type="password" id="userPassword" placeholder="Şifre">
+            <div class="auth-buttons">
+                <button id="btnSignIn" class="auth-btn">Giriş Yap</button>
+                <button id="btnSignOut" class="auth-btn" style="display: none;">Çıkış Yap</button>
+            </div>
+            <div id="auth-status">Durum: Oturum açılmadı</div>
+        </div>
+
         <div id="status">Bağlantı bekleniyor...</div>
     </div>
     
-    <!-- Custom Toast UI (alert alternatifi) -->
+    <!-- Custom Toast UI -->
     <div id="toast-container">Mesaj</div>
 
     <script>
@@ -260,6 +325,7 @@
         let requestID = null;
         let driftCorrection = 0;
         let isFeedingInProgess = false;
+        let isUserAuthenticated = false;
 
         // --- THEME ---
         document.getElementById('theme-toggle').addEventListener('click', () => {
@@ -286,7 +352,11 @@
                 feed_btn: "YEM VER",
                 feed_sending: "GÖNDERİLİYOR...",
                 feed_success: "TETİKLENDİ!",
-                feed_cooldown: "BEKLEYİNİZ..."
+                feed_cooldown: "BEKLEYİNİZ...",
+                auth_not_logged: "Durum: Oturum açılmadı (Yem verilemez)",
+                auth_logged_in: "Durum: Giriş yapıldı: ",
+                btn_signin: "Giriş Yap",
+                btn_signout: "Çıkış Yap"
             },
             en: {
                 title: "NetTime Server",
@@ -302,7 +372,11 @@
                 feed_btn: "FEED NOW",
                 feed_sending: "SENDING...",
                 feed_success: "TRIGGERED!",
-                feed_cooldown: "WAIT..."
+                feed_cooldown: "WAIT...",
+                auth_not_logged: "Status: Not logged in (Cannot feed)",
+                auth_logged_in: "Status: Logged in as: ",
+                btn_signin: "Sign In",
+                btn_signout: "Sign Out"
             }
         };
 
@@ -321,6 +395,8 @@
             document.getElementById('lbl-hum').innerText = t.hum;
             document.getElementById('lbl-isfed').innerText = t.isFed;
             document.getElementById('lbl-fedtp').innerText = t.lastFed;
+            document.getElementById('btnSignIn').innerText = t.btn_signin;
+            document.getElementById('btnSignOut').innerText = t.btn_signout;
 
             if (!isFeedingInProgess) {
                 document.getElementById('lbl-feed-btn').innerText = t.feed_btn;
@@ -351,7 +427,54 @@
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
         const dataRef = database.ref('/NetTime');
+
+        // --- AUTHENTICATION LOGIC ---
+        const emailInput = document.getElementById("userEmail");
+        const passwordInput = document.getElementById("userPassword");
+        const signInButton = document.getElementById("btnSignIn");
+        const signOutButton = document.getElementById("btnSignOut");
+        const authStatusDisplay = document.getElementById("auth-status");
+        const feedBtn = document.getElementById('btn-feed');
+
+        signInButton.addEventListener("click", () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    console.error("Sign in error:", error.message);
+                    showToast(currentLang === 'tr' ? "Giriş başarısız: " + error.message : "Sign in failed: " + error.message);
+                });
+        });
+
+        signOutButton.addEventListener("click", () => {
+            auth.signOut().catch((error) => {
+                console.error("Sign out error:", error.message);
+            });
+        });
+
+        auth.onAuthStateChanged((user) => {
+            const t = translations[currentLang];
+            if (user) {
+                isUserAuthenticated = true;
+                authStatusDisplay.innerText = t.auth_logged_in + user.email;
+                signInButton.style.display = "none";
+                signOutButton.style.display = "block";
+                emailInput.style.display = "none";
+                passwordInput.style.display = "none";
+                if (!isFeedingInProgess) feedBtn.disabled = false;
+            } else {
+                isUserAuthenticated = false;
+                authStatusDisplay.innerText = t.auth_not_logged;
+                signInButton.style.display = "block";
+                signOutButton.style.display = "none";
+                emailInput.style.display = "block";
+                passwordInput.style.display = "block";
+                feedBtn.disabled = true;
+            }
+        });
 
         // --- CANLI VERİ DİNLEME ---
         dataRef.on('value', (snapshot) => {
@@ -401,7 +524,7 @@
             }
         });
 
-        // --- BAGLANTI TAKIBI ---
+        // --- BAĞLANTI TAKİBİ ---
         const connectedRef = database.ref(".info/connected");
         connectedRef.on("value", (snap) => {
             if (snap.val() === true) {
@@ -433,7 +556,7 @@
             requestID = requestAnimationFrame(update);
         }
         
-        // --- TOAST MESAJI (Alert alternatifi) ---
+        // --- TOAST MESAJI ---
         let toastTimeout;
         function showToast(message) {
             const toast = document.getElementById('toast-container');
@@ -446,19 +569,16 @@
         }
 
         // --- YEMLEME BUTONU EYLEMİ ---
-        const feedBtn = document.getElementById('btn-feed');
         const feedBtnLabel = document.getElementById('lbl-feed-btn');
 
         feedBtn.addEventListener('click', () => {
-            if (isFeedingInProgess) return;
+            if (isFeedingInProgess || !isUserAuthenticated) return;
 
             const t = translations[currentLang];
             isFeedingInProgess = true;
             feedBtn.disabled = true;
             feedBtnLabel.innerText = t.feed_sending;
 
-            // Firebase `/NetTime/triggerFeed` değerini true yapıyoruz.
-            // ESP32 (NetTime Server) bu değeri dinleyip yerel ağda UDP 'FEED_NOW' yayınlar.
             dataRef.child('triggerFeed').set(true)
                 .then(() => {
                     feedBtnLabel.innerText = t.feed_success;
@@ -471,7 +591,7 @@
                             } else {
                                 clearInterval(interval);
                                 isFeedingInProgess = false;
-                                feedBtn.disabled = false;
+                                if (isUserAuthenticated) feedBtn.disabled = false;
                                 feedBtnLabel.innerText = translations[currentLang].feed_btn;
                             }
                         }, 1000);
@@ -479,10 +599,9 @@
                 })
                 .catch((error) => {
                     console.error("Firebase Feed Trigger Error:", error);
-                    // alert() yerine toast kullanılıyor
                     showToast(currentLang === 'tr' ? "Yemleme isteği gönderilemedi!" : "Feed request failed!");
                     isFeedingInProgess = false;
-                    feedBtn.disabled = false;
+                    if (isUserAuthenticated) feedBtn.disabled = false;
                     feedBtnLabel.innerText = translations[currentLang].feed_btn;
                 });
         });
