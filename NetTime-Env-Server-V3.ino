@@ -114,6 +114,13 @@ void TaskNetworkAndLogic(void *pvParameters) {
   for (;;) {
     netBox.handleOTA();  // OTA desteği
 
+    if (timeBox.getHour() == 0 && timeBox.getMinute() == 0) {
+      if (isFed) {
+        isFed = false;
+        lastFedTime = 0;
+        // Veritabanını güncellemek için bir tetikleyici burada çalışabilir
+      }
+    }
     if (WiFi.status() == WL_CONNECTED) {
       netBox.updateFirebase(currentTemp, currentHum, timeBox.getFormattedTime(),
                             timeBox.getFormattedDate(), timeBox.getTimestamp(), isFed, lastFedTime);
