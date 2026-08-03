@@ -225,7 +225,7 @@ public:
         broadcastUDP("RESTART");
 
         // Tetikleyiciyi sıfırla (tekrar tetiklenebilmesi için)
-        Firebase.setBool(firebaseData, "/NetTime/triggerFeed", false);
+        Firebase.setBool(firebaseData, "/NetTime/triggerReset", false);
       }
     }
   }
