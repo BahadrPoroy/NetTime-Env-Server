@@ -34,6 +34,10 @@
             --feed-btn-hover: #f57c00;
             --feed-btn-active: #bf360c;
             --feed-btn-shadow: rgba(230, 81, 0, 0.4);
+            --reset-btn-bg: #c62828;
+            --reset-btn-hover: #ef5350;
+            --reset-btn-active: #b71c1c;
+            --reset-btn-shadow: rgba(198, 40, 40, 0.4);
         }
 
         [data-theme="light"] {
@@ -48,6 +52,10 @@
             --feed-btn-hover: #b45309;
             --feed-btn-active: #92400e;
             --feed-btn-shadow: rgba(217, 119, 6, 0.3);
+            --reset-btn-bg: #dc2626;
+            --reset-btn-hover: #b91c1c;
+            --reset-btn-active: #991b1b;
+            --reset-btn-shadow: rgba(220, 38, 38, 0.3);
         }
 
         body {
@@ -108,12 +116,17 @@
             transition: transform 0.1s ease, background-color 0.2s ease;
         }
 
-        .lang-btn:active, .theme-btn:active {
-            transform: scale(0.95);
+            .lang-btn:active, .theme-btn:active {
+                transform: scale(0.95);
+            }
+
+        .lang-btn {
+            right: 20px;
         }
 
-        .lang-btn { right: 20px; }
-        .theme-btn { left: 20px; }
+        .theme-btn {
+            left: 20px;
+        }
 
         .row {
             display: flex;
@@ -122,10 +135,10 @@
             margin-top: 15px;
         }
 
-        .row > div {
-            flex: 1;
-            text-align: center;
-        }
+            .row > div {
+                flex: 1;
+                text-align: center;
+            }
 
         /* --- AUTHENTICATION AREA --- */
         .auth-area {
@@ -135,18 +148,18 @@
             text-align: left;
         }
 
-        .auth-area input {
-            width: 100%;
-            padding: 8px 10px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            border: 1px solid #555;
-            background: var(--bg-color);
-            color: var(--text-color);
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            font-size: 0.9rem;
-        }
+            .auth-area input {
+                width: 100%;
+                padding: 8px 10px;
+                margin-bottom: 8px;
+                border-radius: 6px;
+                border: 1px solid #555;
+                background: var(--bg-color);
+                color: var(--text-color);
+                box-sizing: border-box;
+                font-family: 'Segoe UI', Tahoma, sans-serif;
+                font-size: 0.9rem;
+            }
 
         .auth-buttons {
             display: flex;
@@ -167,9 +180,9 @@
             transition: opacity 0.2s;
         }
 
-        .auth-btn:hover {
-            opacity: 0.8;
-        }
+            .auth-btn:hover {
+                opacity: 0.8;
+            }
 
         #auth-status {
             font-size: 0.75rem;
@@ -179,55 +192,77 @@
             word-break: break-all;
         }
 
-        /* --- BESLEME BUTONU VE EYLEM ALANI --- */
+        /* --- ACTION AREA (BUTONLAR) --- */
         .action-area {
             margin-top: 20px;
             padding-top: 15px;
             border-top: 1px dashed #444;
+            display: flex;
+            gap: 12px;
         }
 
-        .feed-btn {
-            width: 100%;
-            background: var(--feed-btn-bg);
+        .action-btn {
+            flex: 1;
             color: #ffffff;
             border: none;
-            padding: 14px 20px;
+            padding: 14px 10px;
             border-radius: 12px;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 700;
             font-family: 'Orbitron', sans-serif;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             cursor: pointer;
-            box-shadow: 0 4px 15px var(--feed-btn-shadow);
             transition: all 0.2s ease-in-out;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 6px;
         }
 
-        .feed-btn:hover:not(:disabled) {
-            background: var(--feed-btn-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--feed-btn-shadow);
+        .feed-btn {
+            background: var(--feed-btn-bg);
+            box-shadow: 0 4px 15px var(--feed-btn-shadow);
         }
 
-        .feed-btn:active:not(:disabled) {
-            background: var(--feed-btn-active);
-            transform: translateY(1px);
-            box-shadow: 0 2px 10px var(--feed-btn-shadow);
+            .feed-btn:hover:not(:disabled) {
+                background: var(--feed-btn-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px var(--feed-btn-shadow);
+            }
+
+            .feed-btn:active:not(:disabled) {
+                background: var(--feed-btn-active);
+                transform: translateY(1px);
+                box-shadow: 0 2px 10px var(--feed-btn-shadow);
+            }
+
+        .reset-btn {
+            background: var(--reset-btn-bg);
+            box-shadow: 0 4px 15px var(--reset-btn-shadow);
         }
 
-        .feed-btn:disabled {
-            background: #555555;
-            color: #888888;
+            .reset-btn:hover:not(:disabled) {
+                background: var(--reset-btn-hover);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px var(--reset-btn-shadow);
+            }
+
+            .reset-btn:active:not(:disabled) {
+                background: var(--reset-btn-active);
+                transform: translateY(1px);
+                box-shadow: 0 2px 10px var(--reset-btn-shadow);
+            }
+
+        .action-btn:disabled {
+            background: #555555 !important;
+            color: #888888 !important;
             cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
+            box-shadow: none !important;
+            transform: none !important;
         }
 
-        .feed-btn .icon {
-            font-size: 1.3rem;
+        .action-btn .icon {
+            font-size: 1.1rem;
         }
 
         #status {
@@ -237,10 +272,10 @@
             font-size: 0.8rem;
         }
 
-        #status.connected {
-            color: var(--status-ok);
-        }
-        
+            #status.connected {
+                color: var(--status-ok);
+            }
+
         #toast-container {
             position: fixed;
             bottom: 20px;
@@ -258,18 +293,24 @@
             transition: opacity 0.3s ease, visibility 0.3s ease;
             z-index: 1000;
         }
-        
-        #toast-container.show {
-            opacity: 1;
-            visibility: visible;
-        }
+
+            #toast-container.show {
+                opacity: 1;
+                visibility: visible;
+            }
 
         @media (max-width: 480px) {
-            .card { padding: 20px; }
-            .val { font-size: 1.8rem; }
-            .feed-btn {
-                font-size: 1rem;
-                padding: 12px 16px;
+            .card {
+                padding: 20px;
+            }
+
+            .val {
+                font-size: 1.8rem;
+            }
+
+            .action-btn {
+                font-size: 0.85rem;
+                padding: 12px 8px;
             }
         }
     </style>
@@ -293,11 +334,15 @@
             <div><p><span id="lbl-fedtp">Yemleme Zamanı</span>:<br><span id="data-fedtp" class="val">----</span></p></div>
         </div>
 
-        <!-- YEMLEME BUTONU ALANI (Başlangıçta devre dışı) -->
+        <!-- EYLEM BUTONLARI ALANI (YEMLEME & RESET) -->
         <div class="action-area">
-            <button id="btn-feed" class="feed-btn" disabled>
+            <button id="btn-feed" class="action-btn feed-btn" disabled>
                 <span class="icon">🐟</span>
                 <span id="lbl-feed-btn">YEM VER</span>
+            </button>
+            <button id="btn-reset" class="action-btn reset-btn" disabled>
+                <span class="icon">🔄</span>
+                <span id="lbl-reset-btn">RESTART</span>
             </button>
         </div>
 
@@ -314,7 +359,7 @@
 
         <div id="status">Bağlantı bekleniyor...</div>
     </div>
-    
+
     <!-- Custom Toast UI -->
     <div id="toast-container">Mesaj</div>
 
@@ -325,6 +370,7 @@
         let requestID = null;
         let driftCorrection = 0;
         let isFeedingInProgess = false;
+        let isResetInProgess = false;
         let isUserAuthenticated = false;
 
         // --- THEME ---
@@ -353,7 +399,11 @@
                 feed_sending: "GÖNDERİLİYOR...",
                 feed_success: "TETİKLENDİ!",
                 feed_cooldown: "BEKLEYİNİZ...",
-                auth_not_logged: "Durum: Oturum açılmadı (Yem verilemez)",
+                reset_btn: "RESTART",
+                reset_sending: "RESETLENİYOR...",
+                reset_success: "SIFIRLANDI!",
+                reset_cooldown: "BEKLEYİNİZ...",
+                auth_not_logged: "Durum: Oturum açılmadı (Komut gönderilemez)",
                 auth_logged_in: "Durum: Giriş yapıldı: ",
                 btn_signin: "Giriş Yap",
                 btn_signout: "Çıkış Yap"
@@ -373,7 +423,11 @@
                 feed_sending: "SENDING...",
                 feed_success: "TRIGGERED!",
                 feed_cooldown: "WAIT...",
-                auth_not_logged: "Status: Not logged in (Cannot feed)",
+                reset_btn: "RESTART",
+                reset_sending: "RESETTING...",
+                reset_success: "RESET!",
+                reset_cooldown: "WAIT...",
+                auth_not_logged: "Status: Not logged in (Cannot send commands)",
                 auth_logged_in: "Status: Logged in as: ",
                 btn_signin: "Sign In",
                 btn_signout: "Sign Out"
@@ -400,6 +454,9 @@
 
             if (!isFeedingInProgess) {
                 document.getElementById('lbl-feed-btn').innerText = t.feed_btn;
+            }
+            if (!isResetInProgess) {
+                document.getElementById('lbl-reset-btn').innerText = t.reset_btn;
             }
 
             const st = document.getElementById('status');
@@ -437,6 +494,7 @@
         const signOutButton = document.getElementById("btnSignOut");
         const authStatusDisplay = document.getElementById("auth-status");
         const feedBtn = document.getElementById('btn-feed');
+        const resetBtn = document.getElementById('btn-reset');
 
         signInButton.addEventListener("click", () => {
             const email = emailInput.value;
@@ -465,6 +523,7 @@
                 emailInput.style.display = "none";
                 passwordInput.style.display = "none";
                 if (!isFeedingInProgess) feedBtn.disabled = false;
+                if (!isResetInProgess) resetBtn.disabled = false;
             } else {
                 isUserAuthenticated = false;
                 authStatusDisplay.innerText = t.auth_not_logged;
@@ -473,6 +532,7 @@
                 emailInput.style.display = "block";
                 passwordInput.style.display = "block";
                 feedBtn.disabled = true;
+                resetBtn.disabled = true;
             }
         });
 
@@ -555,7 +615,7 @@
             }
             requestID = requestAnimationFrame(update);
         }
-        
+
         // --- TOAST MESAJI ---
         let toastTimeout;
         function showToast(message) {
@@ -603,6 +663,44 @@
                     isFeedingInProgess = false;
                     if (isUserAuthenticated) feedBtn.disabled = false;
                     feedBtnLabel.innerText = translations[currentLang].feed_btn;
+                });
+        });
+
+        // --- RESET BUTONU EYLEMİ ---
+        const resetBtnLabel = document.getElementById('lbl-reset-btn');
+
+        resetBtn.addEventListener('click', () => {
+            if (isResetInProgess || !isUserAuthenticated) return;
+
+            const t = translations[currentLang];
+            isResetInProgess = true;
+            resetBtn.disabled = true;
+            resetBtnLabel.innerText = t.reset_sending;
+
+            dataRef.child('triggerReset').set(true)
+                .then(() => {
+                    resetBtnLabel.innerText = t.reset_success;
+                    setTimeout(() => {
+                        let cooldownSeconds = 5;
+                        const interval = setInterval(() => {
+                            if (cooldownSeconds > 0) {
+                                resetBtnLabel.innerText = `${t.reset_cooldown} (${cooldownSeconds}s)`;
+                                cooldownSeconds--;
+                            } else {
+                                clearInterval(interval);
+                                isResetInProgess = false;
+                                if (isUserAuthenticated) resetBtn.disabled = false;
+                                resetBtnLabel.innerText = translations[currentLang].reset_btn;
+                            }
+                        }, 1000);
+                    }, 1500);
+                })
+                .catch((error) => {
+                    console.error("Firebase Reset Trigger Error:", error);
+                    showToast(currentLang === 'tr' ? "Reset isteği gönderilemedi!" : "Reset request failed!");
+                    isResetInProgess = false;
+                    if (isUserAuthenticated) resetBtn.disabled = false;
+                    resetBtnLabel.innerText = translations[currentLang].reset_btn;
                 });
         });
 

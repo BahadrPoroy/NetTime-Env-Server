@@ -128,7 +128,7 @@ public:
     udp.begin(INCOMING_PORT);
   }
 
-  void updateFirebase(float temp, float hum, String time, String date, long ts, bool isFed, long lastFedTime) {
+  void updateFirebase(float temp, float hum, String time, String date, long ts, volatile bool isFed, volatile long lastFedTime) {
     Firebase.setFloat(firebaseData, "/NetTime/sicaklik", temp);
     Firebase.setFloat(firebaseData, "/NetTime/nem", hum);
     Firebase.setString(firebaseData, "/NetTime/son_guncelleme", time);
@@ -171,7 +171,7 @@ public:
     Firebase.setBool(firebaseData, "/Settings/" + key, value);
   }
 
-  void readFirebase(bool &isFed, long &lastFedTime) {
+  void readFirebase(volatile bool &isFed, volatile long &lastFedTime) {
     if (Firebase.getBool(firebaseData, "/NetTime/isFed")) {
       isFed = firebaseData.boolData();
     }
@@ -217,9 +217,20 @@ public:
         Firebase.setBool(firebaseData, "/NetTime/triggerFeed", false);
       }
     }
+    if (Firebase.getBool(firebaseData, "/NetTime/triggerReset")) {
+      if (firebaseData.dataType() == "boolean" && firebaseData.boolData() == true) {
+        Serial.println("[REMOTE RESTART] Web arayüzünden restart emri alındı! UDP yayınlanıyor...");
+
+        // Yerel ağa UDP paketi yayınla
+        broadcastUDP("RESTART");
+
+        // Tetikleyiciyi sıfırla (tekrar tetiklenebilmesi için)
+        Firebase.setBool(firebaseData, "/NetTime/triggerFeed", false);
+      }
+    }
   }
 
-  void handleFeederNetwork(String &currentFedState, bool &isFed, long &lastFedTime, long currentTimestamp) {
+  void handleFeederNetwork(String &currentFedState, volatile bool &isFed, volatile long &lastFedTime, long currentTimestamp) {
     int packetSize = udp.parsePacket();
 
     if (packetSize) {

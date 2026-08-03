@@ -18,10 +18,10 @@ NetBoxManager netBox;
 TimeManager timeBox;
 
 // --- Global Veriler ---
-float currentTemp, currentHum;
-bool isFed = false;
+volatile float currentTemp, currentHum;
+volatile bool isFed = false;
 String feederStatus = "IDLE";
-long lastFedTime = 0;
+volatile long lastFedTime = 0;
 String currentPage = "main";  // Nextion üzerinde aktif olan sayfa adı
 
 // Nextion Seri Port
@@ -85,6 +85,9 @@ void TaskNextion(void *pvParameters) {
         if (nextionCommandBuffer == "FEED") {
           netBox.broadcastUDP("FEED_NOW");
           lastFedTime = timeBox.getTimestamp();
+        }
+        else if (nextionCommandBuffer == "RESET") {
+          netBox.broadcastUDP("RESTART");
         }
         // Sayfa değiştiğinde Nextion'dan gelen PAGE:sayfaAdi verisi ayrıştırılır
         else if (nextionCommandBuffer.startsWith("PAGE:")) {
@@ -191,6 +194,7 @@ void setup() {
   timeBox.begin();
   DHT.begin();
 
+  netBox.readFirebase(isFed, lastFedTime);
   // Görevleri Başlat
   xTaskCreate(TaskSensor, "SensorTask", 2048, NULL, 1, NULL);
   xTaskCreate(TaskNextion, "NextionTask", 4096, NULL, 3, NULL);
